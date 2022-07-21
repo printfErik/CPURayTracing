@@ -5,6 +5,7 @@ enum class eParseRetType
 {
 	kSuccess,
 	kFileNotExists,
+	kEyeKeywordFormatError,
 };
 
 

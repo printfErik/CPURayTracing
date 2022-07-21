@@ -11,6 +11,7 @@ ObjFileReader::ObjFileReader()
 
 eParseRetType ObjFileReader::parseFile()
 {
+	_ASSERT(!m_objFileInfo);
 	std::ifstream inFile;
 	inFile.open(m_fileName);
 
@@ -24,10 +25,29 @@ eParseRetType ObjFileReader::parseFile()
 	while (std::getline(inFile, line))
 	{
 		std::istringstream iss(line);
-		std::string keyword;
-		while (iss >> keyword)
+		std::string block;
+		while (iss >> block)
 		{
-			if (std::algorithm::firstToken == "")
+			if (block == "eye")
+			{
+				std::vector<float> v3(3);
+				for (int i = 0; i < 3; i++)
+				{
+					if (iss >> block)
+					{
+						v3[i] = std::stof(block);
+					}
+					else
+					{
+						std::cout << "-----------FILE PARSE ERROR-------------"<< std::endl;
+						std::cout << "Keyword: " << block << " requires 3 floats" << m_fileName << std::endl;
+						return eParseRetType::kEyeKeywordFormatError;
+					}
+				}
+				rtVector3 vx();
+				m_objFileInfo->eye = vx;
+			}
+
 		}
 	}
 }

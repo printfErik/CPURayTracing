@@ -26,7 +26,7 @@ struct ObjFileInfo
 	std::vector<rtVector3> vertexNormals;
 	std::vector<rtVector2> vertexTextureCoordinates;
 	std::vector<std::vector<std::vector<int>>> faces;
-	std::string texture;
+	std::string texturePath;
 };
 
 class ObjFileReader : public FileReaderBase
