@@ -20,9 +20,9 @@ struct ObjFileInfo
 	rtVector2 imageSize;
 	rtColor bkgColor;
 	rtMaterial material;
-	std::vector<rtSphere> sphere;
-	rtLight light;
-	std::vector<rtVector3> verteices;
+	std::vector<rtSphere> spheres;
+	std::vector<rtLight> lights;
+	std::vector<rtPoint> verteices;
 	std::vector<rtVector3> vertexNormals;
 	std::vector<rtVector2> vertexTextureCoordinates;
 	std::vector<std::vector<std::vector<int>>> faces;

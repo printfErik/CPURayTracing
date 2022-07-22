@@ -4,7 +4,6 @@
 class rtSphere
 {
 public:
-
 	rtSphere() = default;
 	rtSphere(rtPoint& _center, float radius)
 		: m_center(_center), m_radius(radius) {}

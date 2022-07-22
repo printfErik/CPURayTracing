@@ -2,8 +2,9 @@ class rtMaterial
 {
 public:
 	rtMaterial();
-	void set_mtlcolor(float iodr, float iodg, float iodb, float iosr, float iosg, float iosb, float ika, float ikd, float iks, float ifo, float alpha, float eta);
-	void set_texture(std::string s);
+	rtMaterial(float _odr, float _odg, float _odb, float _osr, float _osg, float _osb, float _ka, float _kd, float _ks, float _falloff, float _alpha, float _eta) :
+		m_odr(_odr), m_odg(_odg), m_odb(_odb), m_osr(_osr), m_osg(_osg), m_osb(_osb), m_ka(_ka), m_kd(_kd), m_ks(_ks), m_falloff(_falloff), m_alpha(_alpha), m_eta(_eta) {}
+
 	std::string get_texturefile();
 	float get_alpha();
 	float get_eta();
@@ -23,6 +24,6 @@ private:
 	float m_falloff;
 
 	std::string texturefile_;
-	float alpha_;
-	float eta_;
+	float m_alpha;
+	float m_eta;
 };
