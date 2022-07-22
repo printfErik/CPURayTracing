@@ -23,7 +23,12 @@ eParseRetType ObjFileReader::parseFile()
 
 	std::string line;
 
-	bool hasEye, hasViewDir, hasUpDir, hasVFov, hasImgSize, hasBkgColor = false;
+	bool hasEye = false;
+	bool hasViewDir = false; 
+	bool hasUpDir = false;
+	bool hasVFov = false;
+	bool hasImgSize = false;
+	bool hasBkgColor = false;
 	while (std::getline(inFile, line))
 	{
 		std::istringstream iss(line);
@@ -103,7 +108,7 @@ eParseRetType ObjFileReader::parseFile()
 			}
 			else if (block == "imsize")
 			{
-				std::vector<float> vec(2);
+				std::vector<int> vec(2);
 				for (int i = 0; i < 2; i++)
 				{
 					if (iss >> block)
@@ -314,7 +319,6 @@ eParseRetType ObjFileReader::parseFile()
 	if (!hasEye || !hasImgSize || !hasBkgColor || !hasUpDir || !hasUpDir || !hasVFov)
 	{
 		std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-		std::cout << "Keyword: " << block << " requires a string" << std::endl;
 		return eParseRetType::kMissingKeywords;
 	}
 

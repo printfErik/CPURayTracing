@@ -16,7 +16,7 @@ struct ObjFileInfo
 	rtVector3 eye;
 	rtVector3 viewDir;
 	rtVector3 upDir;
-	float vFov;
+	float vFov = 0.f;
 	rtVector2 imageSize;
 	rtColor bkgColor;
 	rtMaterial material;

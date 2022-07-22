@@ -13,7 +13,8 @@ enum class eParseRetType
 class FileReaderBase
 {
 public:
-	FileReaderBase(std::string _fileName)
+	FileReaderBase(){}
+	FileReaderBase(const std::string& _fileName)
 		: m_fileName(_fileName) {}
 	virtual eParseRetType parseFile() = 0;
 

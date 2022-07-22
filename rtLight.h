@@ -40,5 +40,5 @@ private:
 
 	rtVector3 m_vec3;
 
-	eLightType m_type;
+	eLightType m_type = eLightType::kPointLight;
 };
