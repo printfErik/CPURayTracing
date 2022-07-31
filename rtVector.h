@@ -17,10 +17,13 @@ public:
 		m_z = p.m_z;
 	}
 
-private:
+
 	float m_x;
 	float m_y;
 	float m_z;
+
+private:
+
 };
 
 class rtVector2

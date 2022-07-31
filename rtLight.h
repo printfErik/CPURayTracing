@@ -5,7 +5,12 @@
 
 enum class eLightType
 {
-	kPointLight
+	kPointLight,
+	kDirectionalLight,
+	kSpotlight,
+	kAttLight,
+	kAttSpotlight,
+	kUndefined
 };
 
 class rtLight
@@ -34,11 +39,35 @@ public:
 		m_color.m_b = _c.m_b;
 	}
 
+	void setVector3(const rtVector3& v)
+	{
+		m_vec3.m_x = v.m_x;
+		m_vec3.m_y = v.m_y;
+		m_vec3.m_z = v.m_z;
+	}
+
+	eLightType getType()
+	{
+		return m_type;
+	}
+
+	void setTheta(float t)
+	{
+		m_theta = t;
+	}
+
+
 private:
 	rtPoint m_center;
 	rtColor m_color;
 
 	rtVector3 m_vec3;
 
-	eLightType m_type = eLightType::kPointLight;
+	eLightType m_type = eLightType::kUndefined;
+
+	float m_theta = 0.f;
+	float m_c1 = 0.f;
+	float m_c2 = 0.f;
+	float m_c3 = 0.f;
+
 };
