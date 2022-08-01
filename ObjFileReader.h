@@ -26,14 +26,14 @@ struct ObjFileInfo
 	std::vector<rtVector3> vertexNormals;
 	std::vector<rtVector2> vertexTextureCoordinates;
 	std::vector<std::vector<std::vector<int>>> faces;
-	std::string texturePath;
+	std::vector<std::string> texturePaths;
 };
 
 class ObjFileReader : public FileReaderBase
 {
 public:
 	ObjFileReader();
-
+	ObjFileReader(const std::string& _fileName);
 	eParseRetType parseFile() override;
 
 private:

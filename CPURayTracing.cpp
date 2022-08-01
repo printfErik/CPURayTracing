@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 		std::cout << "file name required" << std::endl;
 		return 0;
 	}
-	auto fileReader = std::make_unique<ObjFileReader>();
+	auto fileReader = std::make_unique<ObjFileReader>(std::string(argv[1]));
 
 	return 0;
 }

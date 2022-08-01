@@ -9,6 +9,12 @@ ObjFileReader::ObjFileReader()
 	m_objFileInfo = std::make_unique<ObjFileInfo>();
 }
 
+ObjFileReader::ObjFileReader(const std::string& _fileName)
+{
+	m_objFileInfo = std::make_unique<ObjFileInfo>();
+	m_fileName = _fileName;
+}
+
 eParseRetType ObjFileReader::parseFile()
 {
 	_ASSERT(!m_objFileInfo);
@@ -258,8 +264,6 @@ eParseRetType ObjFileReader::parseFile()
 				default:
 					break;
 				}
-
-				
 			}
 			else if (block == "v")
 			{
@@ -357,7 +361,7 @@ eParseRetType ObjFileReader::parseFile()
 			{
 				if (iss >> block)
 				{
-					m_objFileInfo->texturePath = block;
+					m_objFileInfo->texturePaths.push_back(block);
 				}
 				else
 				{

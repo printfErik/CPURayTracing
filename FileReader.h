@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <vector>
+
 
 enum class eParseRetType
 {
@@ -16,9 +18,8 @@ public:
 	FileReaderBase(){}
 	FileReaderBase(const std::string& _fileName)
 		: m_fileName(_fileName) {}
-	virtual eParseRetType parseFile() = 0;
 
-	
+	virtual eParseRetType parseFile() = 0;
 protected:
 
 	std::string m_fileName;

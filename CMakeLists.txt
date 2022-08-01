@@ -2,5 +2,5 @@
 
 project ("CPURayTracing")
 
-add_executable (CPURayTracing "CPURayTracing.cpp"  "FileReader.cpp" "FileReader.h" "ObjFileReader.cpp" "ObjFileReader.h" "rtVector.cpp" "rtVector.h" "rtColor.cpp" "rtColor.h" "rtMaterial.h" "rtSphere.cpp" "rtSphere.h" "rtPoint.cpp" "rtPoint.h" "rtLight.cpp" "rtLight.h")
+add_executable (CPURayTracing "CPURayTracing.cpp"  "FileReader.cpp" "FileReader.h" "ObjFileReader.cpp" "ObjFileReader.h" "rtVector.cpp" "rtVector.h" "rtColor.cpp" "rtColor.h" "rtMaterial.h" "rtSphere.cpp" "rtSphere.h" "rtPoint.cpp" "rtPoint.h" "rtLight.cpp" "rtLight.h" "PpmFileReader.cpp" "PpmFileReader.h")
 
