@@ -48,10 +48,46 @@ bool rayTracer::ComputeAspectRatioAndRenderPlane()
 	n.twoNorm();
 
 	rtPoint center = rtPoint::add(fileInfo->eye, n.scale(distance));
-	rtPoint ul = rtPoint::add(rtPoint::add(center, m_u.scale(-width / 2.f)), m_v.scale(height / 2.f));
-	rtPoint ur = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(width / 2.f).add(m_v.scale(height / 2.f))));
-	rtPoint ll = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(-width / 2.f).add(m_v.scale(-height / 2.f))));
-	rtPoint lr = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(width / 2.f).add(m_v.scale(-height / 2.f))));
+	m_ul = rtPoint::add(rtPoint::add(center, m_u.scale(-width / 2.f)), m_v.scale(height / 2.f));
+	m_ur = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(width / 2.f).add(m_v.scale(height / 2.f))));
+	m_ll = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(-width / 2.f).add(m_v.scale(-height / 2.f))));
+	m_lr = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(width / 2.f).add(m_v.scale(-height / 2.f))));
 
 	return true;
+}
+
+void rayTracer::InitPixelArray()
+{
+	auto fileInfo = m_fileReader->getFileInfo();
+
+	m_pixels.resize(fileInfo->imageSize.m_x, std::vector<rtColor>(fileInfo->imageSize.m_y, fileInfo->bkgColor));
+
+	for (int i = 0; i < fileInfo->imageSize.m_x; i++)
+	{
+		for (int j = 0; j < fileInfo->imageSize.m_y; j++)
+		{
+			m_pixels[i][j] = fileInfo->bkgColor;
+		}
+	}
+}
+
+void rayTracer::CreatePixelIndexTo3DPointMap()
+{
+	auto fileInfo = m_fileReader->getFileInfo();
+	rtVector3 d_h = m_ur.subtract(m_ul).scale(1.f / fileInfo->imageSize.m_x);
+	rtVector3 d_v = m_ll.subtract(m_ul).scale(1.f / fileInfo->imageSize.m_y);
+
+	rtVector3 d_ch = m_ur.subtract(m_ul).scale(1.f / (2.f * fileInfo->imageSize.m_x));
+	rtVector3 d_cv = m_ll.subtract(m_ul).scale(1.f / (2.f * fileInfo->imageSize.m_y));
+	
+	for (int i = 0; i < fileInfo->imageSize.m_x; i++)
+	{
+		for (int j = 0; j < fileInfo->imageSize.m_y; j++)
+		{
+			rtPoint p = rtPoint::add(m_ul, d_h.scale((float)i).add(d_v.scale((float)j)).add(d_ch).add(d_cv));
+			rtVector2 index(i, j);
+			m_imgIndex2PointMap[index] = p;
+		}
+	}
+
 }

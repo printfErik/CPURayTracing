@@ -23,6 +23,7 @@ public:
 	void selfScale(float s);
 	rtVector3 scale(float s);
 	rtVector3 add(const rtVector3& v);
+	rtVector3 subtract(const rtVector3& v);
 
 	float m_x;
 	float m_y;

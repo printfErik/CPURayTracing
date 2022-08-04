@@ -10,6 +10,7 @@ public:
 		: m_x(_x), m_y(_y), m_z(_z) {}
 
 	static rtPoint add(const rtPoint& p, const rtVector3& v);
+	rtVector3 subtract(const rtPoint& v);
 
 	float m_x;
 	float m_y;
