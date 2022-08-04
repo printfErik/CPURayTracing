@@ -13,7 +13,7 @@ using ObjKeywords = std::string;
 
 struct ObjFileInfo
 {
-	rtVector3 eye;
+	rtPoint eye;
 	rtVector3 viewDir;
 	rtVector3 upDir;
 	float vFov = 0.f;
@@ -35,8 +35,9 @@ public:
 	ObjFileReader();
 	ObjFileReader(const std::string& _fileName);
 	eParseRetType parseFile() override;
+	std::shared_ptr<ObjFileInfo> getFileInfo();
 
 private:
 
-	std::unique_ptr<ObjFileInfo> m_objFileInfo;
+	std::shared_ptr<ObjFileInfo> m_objFileInfo;
 };

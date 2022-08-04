@@ -17,6 +17,12 @@ public:
 		m_z = p.m_z;
 	}
 
+	static rtVector3 crossProduct(const rtVector3& v1, const rtVector3& v2);
+
+	void twoNorm();
+	void selfScale(float s);
+	rtVector3 scale(float s);
+	rtVector3 add(const rtVector3& v);
 
 	float m_x;
 	float m_y;
@@ -34,7 +40,6 @@ public:
 		m_x(_x), m_y(_y) {}
 
 
-private:
 	float m_x;
 	float m_y;
 };

@@ -6,13 +6,18 @@
 
 ObjFileReader::ObjFileReader()
 {
-	m_objFileInfo = std::make_unique<ObjFileInfo>();
+	m_objFileInfo = std::make_shared<ObjFileInfo>();
 }
 
 ObjFileReader::ObjFileReader(const std::string& _fileName)
 {
-	m_objFileInfo = std::make_unique<ObjFileInfo>();
+	m_objFileInfo = std::make_shared<ObjFileInfo>();
 	m_fileName = _fileName;
+}
+
+std::shared_ptr<ObjFileInfo> ObjFileReader::getFileInfo()
+{
+	return m_objFileInfo;
 }
 
 eParseRetType ObjFileReader::parseFile()
@@ -57,7 +62,7 @@ eParseRetType ObjFileReader::parseFile()
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
-				m_objFileInfo->eye = rtVector3(vec[0], vec[1], vec[2]);
+				m_objFileInfo->eye = rtPoint(vec[0], vec[1], vec[2]);
 				hasEye = true;
 			}
 			else if (block == "viewDir")
