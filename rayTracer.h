@@ -1,6 +1,7 @@
 #pragma once
 #include "ObjFileReader.h"
 #include <map>
+#include "rtRay.h"
 
 class rayTracer
 {
@@ -11,6 +12,9 @@ public:
 	bool ComputeAspectRatioAndRenderPlane();
 	void InitPixelArray();
 	void CreatePixelIndexTo3DPointMap();
+	void CreatePixelIndexToRayMap();
+	void ComputePixelColor();
+	rtColor RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double etai, bool isSphere, int whichObj, double lastEta);
 
 private:
 
@@ -27,4 +31,5 @@ private:
 	rtPoint m_lr;
 
 	std::map<rtVector2, rtPoint> m_imgIndex2PointMap;
+	std::map<rtVector2, rtRay> m_imgIndex2RayMap;
 };

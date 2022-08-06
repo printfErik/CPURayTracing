@@ -91,3 +91,41 @@ void rayTracer::CreatePixelIndexTo3DPointMap()
 	}
 
 }
+
+void rayTracer::CreatePixelIndexToRayMap()
+{
+	auto fileInfo = m_fileReader->getFileInfo();
+	for (int i = 0; i < fileInfo->imageSize.m_x; i++)
+	{
+		for (int j = 0; j < fileInfo->imageSize.m_y; j++)
+		{
+			rtVector2 index(i, j);
+			rtPoint end = m_imgIndex2PointMap[index];
+			rtVector3 rayDir = end.subtract(fileInfo->eye);
+			rayDir.twoNorm();
+			rtRay ray;
+			ray.m_origin = fileInfo->eye;
+			ray.m_direction = rayDir;
+			m_imgIndex2RayMap[index] = ray;
+		}
+	}
+}
+
+void rayTracer::ComputePixelColor()
+{
+	auto fileInfo = m_fileReader->getFileInfo();
+	for (int i = 0; i < fileInfo->imageSize.m_x; i++)
+	{
+		for (int j = 0; j < fileInfo->imageSize.m_y; j++)
+		{
+			rtVector2 index(i, j);
+			rtRay ray = m_imgIndex2RayMap[index];
+			rtColor pixelColor = traceRay(ray, )
+		}
+	}
+}
+
+void rayTracer::TraceRay(rtRay& ray, )
+{
+
+}

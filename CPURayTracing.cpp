@@ -16,6 +16,5 @@ int main(int argc, char* argv[])
 	rayTracerApp->ComputeUV();
 	rayTracerApp->ComputeAspectRatioAndRenderPlane();
 
-	
 	return 0;
 }
