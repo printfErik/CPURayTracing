@@ -4,6 +4,8 @@
 #include <cmath>
 #include <corecrt_math_defines.h>
 
+static constexpr int MAX_RECURSIVE_DEPTH = 7;
+
 bool rayTracer::Init(const std::string& fileName)
 {
 	m_fileReader = std::make_unique<ObjFileReader>(fileName);
@@ -120,12 +122,22 @@ void rayTracer::ComputePixelColor()
 		{
 			rtVector2 index(i, j);
 			rtRay ray = m_imgIndex2RayMap[index];
-			rtColor pixelColor = traceRay(ray, )
+			rtColor pixelColor = RecursiveTraceRay(ray, )
 		}
 	}
 }
 
-void rayTracer::TraceRay(rtRay& ray, )
+rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double etai, bool isSphere, int objIndex, double lastEta)
 {
+	auto fileInfo = m_fileReader->getFileInfo();
+	if (recusiveDepth == MAX_RECURSIVE_DEPTH)
+	{
+		rtColor terminateColor;
+		float r, g, b;
+		if (isSphere)
+		{
+			r = fileInfo->materials[fileInfo->spheres[objIndex].]
+		}
+	}
 
 }

@@ -12,7 +12,10 @@ public:
 	void set_alpha(float alpha);
 	void set_eta(float eta);
 
-private:
+	void setTextureFile(const std::string& filePath);
+	void setMtlProperties(float _odr, float _odg, float _odb, float _osr, float _osg, float _osb, float _ka, float _kd, float _ks, float _falloff, float _alpha, float _eta);
+
+
 	float m_odr;
 	float m_odg;
 	float m_odb;
@@ -23,8 +26,10 @@ private:
 	float m_kd;
 	float m_ks;
 	float m_falloff;
-
-	std::string texturefile_;
 	float m_alpha;
 	float m_eta;
+
+private:
+	std::string m_textureFilePath;
+	
 };

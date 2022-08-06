@@ -171,7 +171,7 @@ eParseRetType ObjFileReader::parseFile()
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
-				m_objFileInfo->material = rtMaterial(vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7], vec[8], vec[9], vec[10], vec[11]);
+				m_objFileInfo->materials.push_back(rtMaterial(vec[0], vec[1], vec[2], vec[3], vec[4], vec[5], vec[6], vec[7], vec[8], vec[9], vec[10], vec[11]));
 			}
 			else if (block == "sphere")
 			{
@@ -190,6 +190,7 @@ eParseRetType ObjFileReader::parseFile()
 					}
 				}
 				rtSphere sphere(rtPoint(vec[0], vec[1], vec[2]), vec[3]);
+				sphere.m_materialIndex = m_objFileInfo->materials.size() - 1;
 				m_objFileInfo->spheres.push_back(sphere);
 			}
 			else if (block == "light")
@@ -361,12 +362,22 @@ eParseRetType ObjFileReader::parseFile()
 					}
 				}
 				m_objFileInfo->faces.push_back(vec);
+				m_objFileInfo->faceMaterialIndexs.push_back(m_objFileInfo->materials.size() - 1);
 			}
 			else if (block == "texture")
 			{
+				rtMaterial texMtl;
 				if (iss >> block)
 				{
-					m_objFileInfo->texturePaths.push_back(block);
+					texMtl.setTextureFile(block);
+					if (m_objFileInfo->materials.empty())
+					{
+						texMtl.setMtlProperties(0, 0, 0, 1, 1, 1, 0.6, 0.8, 0.2, 10, 1, 1);
+					}
+					else
+					{
+						texMtl.setMtlProperties(0, 0, 0, 1, 1, 1, m_objFileInfo->materials.back().m_ka, m_objFileInfo->materials.back().m_kd, m_objFileInfo->materials.back().m_ks, m_objFileInfo->materials.back().m_falloff, m_objFileInfo->materials.back().m_alpha, m_objFileInfo->materials.back().m_eta);
+					}
 				}
 				else
 				{
@@ -374,6 +385,7 @@ eParseRetType ObjFileReader::parseFile()
 					std::cout << "Keyword: " << block << " requires a string" << std::endl;
 					return eParseRetType::kEyeKeywordFormatError;
 				}
+				m_objFileInfo->materials.push_back(texMtl);
 			}
 		}
 	}

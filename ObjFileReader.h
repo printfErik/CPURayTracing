@@ -19,14 +19,14 @@ struct ObjFileInfo
 	float vFov = 0.f;
 	rtVector2 imageSize;
 	rtColor bkgColor;
-	rtMaterial material;
+	std::vector<rtMaterial> materials;
 	std::vector<rtSphere> spheres;
 	std::vector<rtLight> lights;
 	std::vector<rtPoint> verteices;
 	std::vector<rtVector3> vertexNormals;
 	std::vector<rtVector2> vertexTextureCoordinates;
 	std::vector<std::vector<std::vector<int>>> faces;
-	std::vector<std::string> texturePaths;
+	std::vector<int> faceMaterialIndexs;
 };
 
 class ObjFileReader : public FileReaderBase

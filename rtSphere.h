@@ -15,7 +15,10 @@ public:
 		m_center.m_z = z;
 	}
 
+	int m_materialIndex = -1;
+
 private:
 	rtPoint m_center;
 	float m_radius = 0.f;
+	
 };
