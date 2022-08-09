@@ -35,4 +35,5 @@ private:
 	std::map<rtVector2, rtRay> m_imgIndex2RayMap;
 
 	std::map<std::string, std::vector<rtColor>> m_textureData;
+	std::map<std::string, rtVector2> m_textureSize;
 };

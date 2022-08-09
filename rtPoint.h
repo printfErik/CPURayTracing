@@ -14,8 +14,5 @@ public:
 
 	float m_x;
 	float m_y;
-	float m_z;
-
-	
-					
+	float m_z;				
 };

@@ -1,13 +1,13 @@
 #include "PpmFileReader.h"
 #include "rtColor.h"
-
+#include "rtVector.h"
 
 PpmFileReader::PpmFileReader(const std::string& fileName)
 {
 	m_fileName = fileName;
 }
 
-void PpmFileReader::getTextureArray(std::vector<rtColor>& texture, int& width, int& height)
+void PpmFileReader::getTextureArray(std::vector<rtColor>& texture, rtVector2& size)
 {
 	std::ifstream inFile;
 	inFile.open(m_fileName);
@@ -15,9 +15,9 @@ void PpmFileReader::getTextureArray(std::vector<rtColor>& texture, int& width, i
 
 	int placeHolder1, placeHolder2;
 
-	inFile >> placeHolder1 >> width >> height >> placeHolder2;
+	inFile >> placeHolder1 >> size.m_x >> size.m_y >> placeHolder2;
 
-	for (int i = 0; i < height * width; i++)
+	for (int i = 0; i < (int)size.m_x * (int)size.m_y; i++)
 	{
 		std::string r, g, b;
 		inFile >> r >> g >> b;

@@ -29,9 +29,10 @@ bool rayTracer::ReadTextureFiles()
 		{
 			std::unique_ptr<PpmFileReader> ppmFileReader = std::make_unique<PpmFileReader>(texName);
 			std::vector<rtColor> texture;
-			ppmFileReader->getTextureArray(texture, 
-				);
+			rtVector2 size;
+			ppmFileReader->getTextureArray(texture, size);
 			m_textureData[texName] = texture;
+			m_textureSize[texName] = size;
 		}
 	}
 }
@@ -357,10 +358,10 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double
 				float textureU, textureV;
 				textureU = (alphas.back() * first_2d.m_x + betas.back() * second_2d.m_x + gammas.back() * third_2d.m_x);
 				textureV = (alphas.back() * first_2d.m_y + betas.back() * second_2d.m_y + gammas.back() * third_2d.m_y);
-				from_texture = m_textureData[name][(int)((textureV * (size_of_textures[index_of_texture][1] - 1)) + 0.5)][(int)((u_for_texture * (size_of_textures[index_of_texture][0] - 1) + 0.5))];
+				from_texture = m_textureData[name][(int)((textureV * (m_textureSize[name].m_y - 1)) + 0.5)][(int)((u_for_texture * (size_of_textures[index_of_texture][0] - 1) + 0.5))];
 				Mtlcolor this_temp;
 
-				this_temp.set_mtlcolor((double)from_texture[0] / 255.0, (double)from_texture[1] / 255.0, (double)from_texture[2] / 255.0, temp.osr, temp.osg, temp.osb, temp.ka, temp.kd, temp.ks, temp.falloff, temp.get_alpha(), temp.get_eta());
+				this_temp.set_mtlcolor((double)from_texture[0] / 255.f, (double)from_texture[1] / 255.f, (double)from_texture[2] / 255.0, temp.osr, temp.osg, temp.osb, temp.ka, temp.kd, temp.ks, temp.falloff, temp.get_alpha(), temp.get_eta());
 				hit = Phong(this_temp, closest, which_object, normal, is_sphere, incidence.ori());
 			}
 			else
