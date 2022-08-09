@@ -8,12 +8,8 @@ public:
 	rtSphere(rtPoint& _center, float radius)
 		: m_center(_center), m_radius(radius) {}
 
-	void setCenter(float x, float y, float z)
-	{
-		m_center.m_x = x;
-		m_center.m_y = y;
-		m_center.m_z = z;
-	}
+	void setCenter(float x, float y, float z);
+
 
 	int m_materialIndex = -1;
 

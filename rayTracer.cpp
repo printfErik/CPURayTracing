@@ -347,7 +347,7 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double
 		std::string name = temp.getTextureFile();
 		if (!name.empty()) // if texture detected
 		{
-			std::vector<int> from_texture;
+			rtColor texelColor;
 			if (!isSphere)
 			{
 				//mapping texture to a triangle
@@ -358,11 +358,12 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double
 				float textureU, textureV;
 				textureU = (alphas.back() * first_2d.m_x + betas.back() * second_2d.m_x + gammas.back() * third_2d.m_x);
 				textureV = (alphas.back() * first_2d.m_y + betas.back() * second_2d.m_y + gammas.back() * third_2d.m_y);
-				from_texture = m_textureData[name][(int)((textureV * (m_textureSize[name].m_y - 1)) + 0.5)][(int)((u_for_texture * (size_of_textures[index_of_texture][0] - 1) + 0.5))];
-				Mtlcolor this_temp;
-
-				this_temp.set_mtlcolor((double)from_texture[0] / 255.f, (double)from_texture[1] / 255.f, (double)from_texture[2] / 255.0, temp.osr, temp.osg, temp.osb, temp.ka, temp.kd, temp.ks, temp.falloff, temp.get_alpha(), temp.get_eta());
-				hit = Phong(this_temp, closest, which_object, normal, is_sphere, incidence.ori());
+				texelColor = m_textureData[name][static_cast<int>(textureV * (m_textureSize[name].m_y - 1.f) + 0.5f) * static_cast<int>(m_textureSize[name].m_x)
+												 + static_cast<int>(textureU * (m_textureSize[name].m_x - 1.f) + 0.5f)];
+				rtMaterial tempMtl((float)texelColor.m_r / 255.f, (double)texelColor.m_g / 255.f, (double)texelColor.m_b / 255.f,
+									temp.m_osr, temp.m_osg, temp.m_osb,
+									temp.m_ka, temp.m_kd, temp.m_ks, temp.m_falloff, temp.m_alpha, temp.m_eta);
+				hit = Phong(tempMtl, closest, objIndex, normal, isSphere, incidence.m_origin);
 			}
 			else
 			{
