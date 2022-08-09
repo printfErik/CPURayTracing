@@ -8,7 +8,7 @@ class PpmFileReader
 {
 public:
 	PpmFileReader(const std::string& fileName);
-	void getTextureArray(std::vector<rtColor>& texture);
+	void getTextureArray(std::vector<rtColor>& texture, int& width, int& height);
 
 private:
 	std::string m_fileName;

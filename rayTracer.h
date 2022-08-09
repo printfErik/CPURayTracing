@@ -8,6 +8,7 @@ class rayTracer
 public:
 	rayTracer() {}
 	bool Init(const std::string& fileName);
+	bool ReadTextureFiles();
 	bool ComputeUV();
 	bool ComputeAspectRatioAndRenderPlane();
 	void InitPixelArray();
@@ -32,4 +33,6 @@ private:
 
 	std::map<rtVector2, rtPoint> m_imgIndex2PointMap;
 	std::map<rtVector2, rtRay> m_imgIndex2RayMap;
+
+	std::map<std::string, std::vector<rtColor>> m_textureData;
 };

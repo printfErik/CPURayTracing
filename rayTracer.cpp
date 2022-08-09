@@ -1,4 +1,5 @@
 #include "rayTracer.h"
+#include "PpmFileReader.h"
 #include <iostream>
 
 #include <cmath>
@@ -16,6 +17,23 @@ bool rayTracer::Init(const std::string& fileName)
 		return false;
 	}
 	return true;
+}
+
+bool rayTracer::ReadTextureFiles()
+{
+	auto fileInfo = m_fileReader->getFileInfo();
+	for (int i = 0; i < fileInfo->materials.size(); i++)
+	{
+		std::string texName = fileInfo->materials[i].getTextureFile();
+		if (!texName.empty())
+		{
+			std::unique_ptr<PpmFileReader> ppmFileReader = std::make_unique<PpmFileReader>(texName);
+			std::vector<rtColor> texture;
+			ppmFileReader->getTextureArray(texture, 
+				);
+			m_textureData[texName] = texture;
+		}
+	}
 }
 
 bool rayTracer::ComputeUV()
@@ -328,20 +346,18 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double
 		std::string name = temp.getTextureFile();
 		if (!name.empty()) // if texture detected
 		{
-
-			int index_of_texture = texturefilename_to_index[name];
-			vector<int> from_texture;
-			if (!is_sphere)
+			std::vector<int> from_texture;
+			if (!isSphere)
 			{
 				//mapping texture to a triangle
-				vector<double> first_2d = vertex_textures[faces[which_object][0][1] - 1];
-				vector<double> second_2d = vertex_textures[faces[which_object][1][1] - 1];
-				vector<double> third_2d = vertex_textures[faces[which_object][2][1] - 1];
+				rtVector2 first_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex][0][1] - 1];
+				rtVector2 second_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex][1][1] - 1];
+				rtVector2 third_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex][2][1] - 1];
 				// using Barycentric coordinates
-				double u_for_texture, v_for_texture;
-				u_for_texture = (alphas.back() * first_2d[0] + betas.back() * second_2d[0] + gammas.back() * third_2d[0]);
-				v_for_texture = (alphas.back() * first_2d[1] + betas.back() * second_2d[1] + gammas.back() * third_2d[1]);
-				from_texture = arrays_of_textures[index_of_texture][(int)((v_for_texture * (size_of_textures[index_of_texture][1] - 1)) + 0.5)][(int)((u_for_texture * (size_of_textures[index_of_texture][0] - 1) + 0.5))];
+				float textureU, textureV;
+				textureU = (alphas.back() * first_2d.m_x + betas.back() * second_2d.m_x + gammas.back() * third_2d.m_x);
+				textureV = (alphas.back() * first_2d.m_y + betas.back() * second_2d.m_y + gammas.back() * third_2d.m_y);
+				from_texture = m_textureData[name][(int)((textureV * (size_of_textures[index_of_texture][1] - 1)) + 0.5)][(int)((u_for_texture * (size_of_textures[index_of_texture][0] - 1) + 0.5))];
 				Mtlcolor this_temp;
 
 				this_temp.set_mtlcolor((double)from_texture[0] / 255.0, (double)from_texture[1] / 255.0, (double)from_texture[2] / 255.0, temp.osr, temp.osg, temp.osb, temp.ka, temp.kd, temp.ks, temp.falloff, temp.get_alpha(), temp.get_eta());

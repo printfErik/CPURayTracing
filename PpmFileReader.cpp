@@ -7,13 +7,13 @@ PpmFileReader::PpmFileReader(const std::string& fileName)
 	m_fileName = fileName;
 }
 
-void PpmFileReader::getTextureArray(std::vector<rtColor>& texture)
+void PpmFileReader::getTextureArray(std::vector<rtColor>& texture, int& width, int& height)
 {
 	std::ifstream inFile;
 	inFile.open(m_fileName);
 	std::string str;
 
-	int placeHolder1, width, height, placeHolder2;
+	int placeHolder1, placeHolder2;
 
 	inFile >> placeHolder1 >> width >> height >> placeHolder2;
 
