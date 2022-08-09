@@ -5,6 +5,7 @@
 #include <corecrt_math_defines.h>
 
 static constexpr int MAX_RECURSIVE_DEPTH = 7;
+static constexpr float EPSILON = 0.00000005;
 
 bool rayTracer::Init(const std::string& fileName)
 {
@@ -153,7 +154,7 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double
 	rtColor hit;
 	float t1 = std::numeric_limits<float>::infinity();
 
-	std::vector<rtVector3> tris;
+	std::vector<rtVector3> triNormals;
 
 	std::vector<float> alphas, betas, gammas;
 
@@ -181,10 +182,10 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double
 
 		float delta = B * B - 4.f * A * C;
 
-		if (delta <= 0.00000005 && delta >= -0.00000005)// (delta close to zero)
+		if (delta <= EPSILON && delta >= -EPSILON)// (delta close to zero)
 		{
 			float tempT = (-B) / (2.f * A);
-			if (tempT < t1 && tempT > 0.00000005)
+			if (tempT < t1 && tempT > EPSILON)
 			{
 				t1 = tempT;
 				objIndex = sphereIndex;
@@ -194,19 +195,19 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double
 				total++;
 			}
 		}
-		else if (delta > 0.00000005)
+		else if (delta > EPSILON)
 		{
 			float tempT1 = (std::sqrt(delta) - B) / (2.f * A);
 			float tempT2 = (-std::sqrt(delta) - B) / (2.f * A);
 			bool isHit = false;
-			if ((tempT1 < t1) && tempT1 > 0.00000005)
+			if ((tempT1 < t1) && tempT1 > EPSILON)
 			{
 				t1 = tempT1;
 				objIndex = sphereIndex;
 				isHit = true;
 			}
 
-			if ((tempT2 < t1) && tempT2 > 0.00000005)
+			if ((tempT2 < t1) && tempT2 > EPSILON)
 			{
 				t1 = tempT2;
 				objIndex = sphereIndex;
@@ -232,104 +233,100 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double
 		rtPoint thirdVertex = fileInfo->verteices[fileInfo->faces[triangleIndex][2][0] - 1];;
 		rtVector3 e1 = secondVertex.subtract(firstVertex);
 		rtVector3 e2 = thirdVertex.subtract(firstVertex);
-		rtVector3 n_for_tri = rtVector3::crossProduct(e1, e2);
-		float A_for_tri = n_for_tri.m_x;
-		float B_for_tri = n_for_tri.m_y;
-		float C_for_tri = n_for_tri.m_z;
-		float D_for_tri = -(firstVertex.m_x * A_for_tri + firstVertex.m_y * B_for_tri + firstVertex.m_z * C_for_tri);
-		float deterimint = A_for_tri * incidence.m_direction.m_x + B_for_tri * incidence.m_direction.m_y + C_for_tri * incidence.m_direction.m_z;
+		rtVector3 normal = rtVector3::crossProduct(e1, e2);
+		float A = normal.m_x;
+		float B = normal.m_y;
+		float C = normal.m_z;
+		float D = -(firstVertex.m_x * A + firstVertex.m_y * B + firstVertex.m_z * C);
+		float deterimint = A * incidence.m_direction.m_x + B * incidence.m_direction.m_y + C * incidence.m_direction.m_z;
+
 		// check if viewdir is parallel to the surface
-		if (deterimint < 0.00000005 && deterimint > -0.00000005)
+		if (deterimint < EPSILON && deterimint > -EPSILON)
 		{
 			total++;
 			continue;
 		}
-		float t_for_tri = -(A_for_tri * incidence.m_origin.m_x + B_for_tri * incidence.m_origin.m_y + C_for_tri * incidence.m_origin.m_z + D_for_tri) / deterimint;
-		if (t_for_tri < 0.f || t_for_tri > t1)
+		float tTri = -(A * incidence.m_origin.m_x + B * incidence.m_origin.m_y + C * incidence.m_origin.m_z + D) / deterimint;
+		if (tTri < 0.f || tTri > t1)
 		{
 			total++;
 			continue;
 		}
-		rtPoint p_for_tri = incidence.m_origin.add(incidence.raydir().scale(t_for_tri));
-		Space_vector e3 = p_for_tri.subtract(second_vertex);
-		Space_vector e4 = p_for_tri.subtract(third_vertex);
-		double totalArea = e1.Area(e2);
-		double aArea = e3.Area(e4);
-		double bArea = e4.Area(e2);
-		double cArea = e1.Area(e3);
+		rtPoint hitPoint = rtPoint::add(incidence.m_origin, incidence.m_direction.scale(tTri));
+		rtVector3 e3 = hitPoint.subtract(secondVertex);
+		rtVector3 e4 = hitPoint.subtract(thirdVertex);
+		double totalArea = rtVector3::area(e1, e2);
+		double aArea = rtVector3::area(e3, e4);
+		double bArea = rtVector3::area(e4, e2);
+		double cArea = rtVector3::area(e1, e3);
 		double alpha = aArea / totalArea;
 		double beta = bArea / totalArea;
 		double gamma = cArea / totalArea;
+
 		// determine Barycentric coordinates
-		if (alpha < 1 && alpha>0 && beta < 1 && beta>0 && gamma > 0 && gamma < 1 && alpha + beta + gamma - 1 < 0.00005)
+		if (alpha < 1 && alpha > 0 && beta < 1 && beta > 0 && gamma > 0 && gamma < 1 && alpha + beta + gamma - 1 < EPSILON)
 		{
-			t1 = t_for_tri;
-			is_sphere = false;
-			which_object = index_tri;
+			t1 = tTri;
+			isSphere = false;
+			objIndex = triangleIndex;
 			alphas.push_back(alpha);
 			betas.push_back(beta);
 			gammas.push_back(gamma);
-			if (faces[index_tri][0][2] == 0)
+			if (fileInfo->faces[triangleIndex][0][2] == 0)
 			{
 				// if no vn, which means flat shading
-				n_for_tris.push_back(n_for_tri);
+				triNormals.push_back(normal);
 			}
 			else
 			{
 				// smooth shading
-				Space_vector first_nromal = vertex_normals[faces[index_tri][0][2] - 1];
-				Space_vector second_nromal = vertex_normals[faces[index_tri][1][2] - 1];
-				Space_vector third_nromal = vertex_normals[faces[index_tri][2][2] - 1];
-				Space_vector smooth_normal = (first_nromal.scale(alpha).add(second_nromal.scale(beta)).add(third_nromal.scale(gamma))).two_norm();
-				n_for_tris.push_back(smooth_normal);
+				rtVector3 first_nromal = fileInfo->vertexNormals[fileInfo->faces[triangleIndex][0][2] - 1];
+				rtVector3 second_nromal = fileInfo->vertexNormals[fileInfo->faces[triangleIndex][1][2] - 1];
+				rtVector3 third_nromal = fileInfo->vertexNormals[fileInfo->faces[triangleIndex][2][2] - 1];
+				rtVector3 smooth_normal = (first_nromal.scale(alpha).add(second_nromal.scale(beta)).add(third_nromal.scale(gamma))).getTwoNorm();
+				triNormals.push_back(smooth_normal);
 			}
-
 		}
 		else
 		{
 			total++;
 			continue;
 		}
-
 	}
 	// if we detect an intersection,find this point and change img color
-	if (total != spheres.size() + faces.size())
+	if (total != fileInfo->spheres.size() + fileInfo->faces.size())
 	{
-		//cout << spheres.size()<<"/"<<faces.size() << endl;
-		Space_vector I = incidence.raydir().two_norm().scale(-1);
-		Space_vector d_ray;
-		d_ray = incidence.raydir().scale(t1);
-		Point closest = incidence.ori().p_add(d_ray);
-		Mtlcolor temp;
-		Space_vector normal;
-		Point sphere_center;
-		if (is_sphere)
+		rtVector3 I = incidence.m_direction.getTwoNorm().scale(-1);
+		rtVector3 rayDir = incidence.m_direction.scale(t1);
+		rtPoint closest = rtPoint::add(incidence.m_origin, rayDir);
+		rtMaterial temp;
+		rtVector3 normal;
+		if (isSphere)
 		{
 			// compute normal vector for sphere which will be used in phong equation
-			temp = n_mtlcolors[spheres[which_object].get_m()];
-			sphere_center.set_point(spheres[which_object].x, spheres[which_object].y, spheres[which_object].z);
-			normal = closest.subtract(sphere_center).two_norm();
+			temp = fileInfo->materials[fileInfo->spheres[objIndex].m_materialIndex];
+			rtPoint sphereCenter(fileInfo->spheres[objIndex].m_center.m_x, fileInfo->spheres[objIndex].m_center.m_y, fileInfo->spheres[objIndex].m_center.m_z);
+			normal = closest.subtract(sphereCenter).getTwoNorm();
 		}
 		else
 		{
 			// compute normal vector for triangle which will be used in phong equation
-			temp = n_mtlcolors[face_mtl[which_object]];
-			normal = n_for_tris.back().two_norm();
+			temp = fileInfo->materials[fileInfo->faceMaterialIndexs[objIndex]];
+			normal = triNormals.back().getTwoNorm();
 		}
 
-		if (I * normal < 0)
+		if (rtVector3::dotProduct(I, normal) < 0)
 		{
 			normal = normal.scale(-1);
-
 		}
 
-		if (is_sphere && (is_sphere == is_sphere_) && (which_object == which_object_))
+		if (isSphere && (isSphere == isSphere_) && (objIndex == objIndex_))
 		{
 			exit = true;
 		}
 
-		string name = temp.get_texturefile();
-		if (name != "") // if texture detected
+		std::string name = temp.getTextureFile();
+		if (!name.empty()) // if texture detected
 		{
 
 			int index_of_texture = texturefilename_to_index[name];

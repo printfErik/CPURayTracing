@@ -18,12 +18,15 @@ public:
 	}
 
 	static rtVector3 crossProduct(const rtVector3& v1, const rtVector3& v2);
+	static float dotProduct(const rtVector3& v1, const rtVector3& v2);
+	static float area(const rtVector3& v1, const rtVector3& v2);
 
 	void twoNorm();
 	void selfScale(float s);
 	rtVector3 scale(float s);
 	rtVector3 add(const rtVector3& v);
 	rtVector3 subtract(const rtVector3& v);
+	rtVector3 getTwoNorm();
 
 	float m_x;
 	float m_y;

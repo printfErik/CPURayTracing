@@ -23,3 +23,8 @@ void rtMaterial::setMtlProperties(float _odr, float _odg, float _odb, float _osr
 	m_alpha = _alpha;
 	m_eta = _eta;
 }
+
+std::string rtMaterial::getTextureFile()
+{
+	return m_textureFilePath;
+}
