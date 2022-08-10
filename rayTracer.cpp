@@ -442,13 +442,14 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 
 rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection, int objIndex, rtVector3& normal, bool isSphere, rtPoint& newOrigin)
 {
+	auto fileInfo = m_fileReader->getFileInfo();
 	rtColor ans;
 	rtPoint center;
 
 	// set intial color based on material property
-	double r = mtlColor.m_ka * mtlColor.m_odr;
-	double g = mtlColor.m_ka * mtlColor.m_odg;
-	double b = mtlColor.m_ka * mtlColor.m_odb;
+	float r = mtlColor.m_ka * mtlColor.m_odr;
+	float g = mtlColor.m_ka * mtlColor.m_odg;
+	float b = mtlColor.m_ka * mtlColor.m_odb;
 	int n_spotligs = 0;
 
 	// translate valid spotlights to normal lights for future use
@@ -478,31 +479,37 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 	}
 
 	// shoot lights to the intersection
-	for (int i = 0; i < lights.size(); i++)
+	for (int i = 0; i < fileInfo->lights.size(); i++)
 	{
-		double shadow_flag = 1.0;
-		Space_vector L;
-		double max_t1;
-		double fatt = 1;
+		auto curLight = fileInfo->lights[i];
+		float shadowMask = 1.f;
+		rtVector3 lightDir;
+		float maxT1;
+		float fatt = 1;
 
 		// calculate the L vector in phong equation
-		if (lights[i].type == 0)
+		switch (curLight.getType())
+		{
+			case eLightType::kPointLight:
+			{
+				rtPoint lightSource(curLight.m_center.m_x, curLight.m_center.m_y, curLight.m_center.m_z);
+				lightDir = lightSource.subtract(intersection);
+				maxT1 = lightDir.length();
+
+				// for point light, use fatt to indicate "Light Source Attenuation"
+				fatt = 1.f / (curLight.m_c1 + curLight.m_c2 * maxT1 + curLight.m_c3 * maxT1 * maxT1);
+			}
+		}
+
+
+		if (fileInfo->lights[i].type == 0)
 		{
 			L.set_vector(-lights[i].x, -lights[i].y, -lights[i].z);
 			L = L.two_norm();
 		}
 		else
 		{
-			Point light_source;
-			light_source.set_point(lights[i].x, lights[i].y, lights[i].z);
-			L = light_source.subtract(intersection);
-			double length_ori_L = L.length();
-			L = L.two_norm();
-			double length_unit_L = L.length();
-			max_t1 = length_ori_L / length_unit_L;
-
-			// for point light, use fatt to indicate "Light Source Attenuation"
-			fatt = (double)1 / (lights[i].c1 + lights[i].c2 * length_ori_L + lights[i].c3 * length_ori_L * length_ori_L);
+			
 		}
 
 		// calculate the V and H vectors in phong equation

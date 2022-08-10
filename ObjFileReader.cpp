@@ -220,6 +220,7 @@ eParseRetType ObjFileReader::parseFile()
 					}
 					light.setCenter(rtPoint(vec[0], vec[1], vec[2]));
 					light.setColor(rtColor(vec[3], vec[4], vec[5]));
+					light.setAttAttribute(1.f, 0.f, 0.f);
 					m_objFileInfo->lights.push_back(light);
 					break;
 				}
@@ -239,8 +240,9 @@ eParseRetType ObjFileReader::parseFile()
 							return eParseRetType::kEyeKeywordFormatError;
 						}
 					}
-					light.setCenter(rtPoint(vec[0], vec[1], vec[2]));
-					light.setVector3(rtVector3(vec[3], vec[4], vec[5]));
+					light.setVector3(rtVector3(vec[0], vec[1], vec[2]));
+					light.setColor(rtColor(vec[3], vec[4], vec[5]));
+					light.setAttAttribute(1.f, 0.f, 0.f);
 					m_objFileInfo->lights.push_back(light);
 					break;
 				}
@@ -264,6 +266,75 @@ eParseRetType ObjFileReader::parseFile()
 					light.setVector3(rtVector3(vec[3], vec[4], vec[5]));
 					light.setTheta(vec[6]);
 					light.setColor(rtColor(vec[7], vec[8], vec[9]));
+					light.setAttAttribute(1.f, 0.f, 0.f);
+					m_objFileInfo->lights.push_back(light);
+					break;
+				}
+				case eLightType::kAttPointLight:
+				{
+					std::vector<float> vec(9);
+					for (int i = 0; i < 9; i++)
+					{
+						if (iss >> block)
+						{
+							vec[i] = std::stof(block);
+						}
+						else
+						{
+							std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
+							std::cout << "Keyword: " << block << " requires 10 floats" << std::endl;
+							return eParseRetType::kEyeKeywordFormatError;
+						}
+					}
+					light.setCenter(rtPoint(vec[0], vec[1], vec[2]));
+					light.setColor(rtColor(vec[3], vec[4], vec[5]));
+					light.setAttAttribute(vec[6], vec[7], vec[8]);
+					m_objFileInfo->lights.push_back(light);
+					break;
+				}
+				case eLightType::kAttDirectionalLight:
+				{
+					std::vector<float> vec(9);
+					for (int i = 0; i < 6; i++)
+					{
+						if (iss >> block)
+						{
+							vec[i] = std::stof(block);
+						}
+						else
+						{
+							std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
+							std::cout << "Keyword: " << block << " requires 7 floats" << std::endl;
+							return eParseRetType::kEyeKeywordFormatError;
+						}
+					}
+					light.setVector3(rtVector3(vec[0], vec[1], vec[2]));
+					light.setColor(rtColor(vec[3], vec[4], vec[5]));
+					light.setAttAttribute(vec[6], vec[7], vec[8]);
+					m_objFileInfo->lights.push_back(light);
+					break;
+				}
+				case eLightType::kAttSpotlight:
+				{
+					std::vector<float> vec(13);
+					for (int i = 0; i < 10; i++)
+					{
+						if (iss >> block)
+						{
+							vec[i] = std::stof(block);
+						}
+						else
+						{
+							std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
+							std::cout << "Keyword: " << block << " requires 7 floats" << std::endl;
+							return eParseRetType::kEyeKeywordFormatError;
+						}
+					}
+					light.setCenter(rtPoint(vec[0], vec[1], vec[2]));
+					light.setVector3(rtVector3(vec[3], vec[4], vec[5]));
+					light.setTheta(vec[6]);
+					light.setColor(rtColor(vec[7], vec[8], vec[9]));
+					light.setAttAttribute(vec[10], vec[11], vec[12]);
 					m_objFileInfo->lights.push_back(light);
 					break;
 				}

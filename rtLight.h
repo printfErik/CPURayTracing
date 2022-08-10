@@ -8,7 +8,8 @@ enum class eLightType
 	kPointLight,
 	kDirectionalLight,
 	kSpotlight,
-	kAttLight,
+	kAttPointLight,
+	kAttDirectionalLight,
 	kAttSpotlight,
 	kUndefined
 };
@@ -56,6 +57,7 @@ public:
 		m_theta = t;
 	}
 
+	void setAttAttribute(float c1, float c2, float c3);
 
 
 	rtPoint m_center;

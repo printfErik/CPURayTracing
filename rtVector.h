@@ -27,6 +27,7 @@ public:
 	rtVector3 add(const rtVector3& v);
 	rtVector3 subtract(const rtVector3& v);
 	rtVector3 getTwoNorm();
+	float length();
 
 	float m_x;
 	float m_y;
