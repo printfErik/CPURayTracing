@@ -9,7 +9,6 @@ enum class eLightType
 	kDirectionalLight,
 	kSpotlight,
 	kAttPointLight,
-	kAttDirectionalLight,
 	kAttSpotlight,
 	kUndefined
 };

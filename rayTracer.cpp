@@ -450,33 +450,6 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 	float r = mtlColor.m_ka * mtlColor.m_odr;
 	float g = mtlColor.m_ka * mtlColor.m_odg;
 	float b = mtlColor.m_ka * mtlColor.m_odb;
-	int n_spotligs = 0;
-
-	// translate valid spotlights to normal lights for future use
-	for (int i = 0; i < spotlights.size(); i++)
-	{
-
-		Spotlight this_spot = spotlights[i];
-		Space_vector vobj;
-		Space_vector vlight;
-		Point this_ori;
-		Color this_color;
-		this_color.set_color(this_spot.r, this_spot.g, this_spot.b);
-		this_ori.set_point(this_spot.x, this_spot.y, this_spot.z);
-		vobj = intersection.subtract(this_ori).two_norm();
-		vlight.set_vector(this_spot.dirx, this_spot.diry, this_spot.dirz);
-		vlight = vlight.two_norm();
-
-		// check if this spotlight is valid for the single intersection 
-		// then add them to the global lights vector and count the number 
-		if (vlight * vobj >= cos(this_spot.theta * M_PI / (double)180))
-		{
-			Light temp_light;
-			temp_light.set_Light(this_spot.x, this_spot.y, this_spot.z, 1, this_color, this_spot.c1, this_spot.c2, this_spot.c3);
-			n_spotligs++;
-			lights.push_back(temp_light);
-		}
-	}
 
 	// shoot lights to the intersection
 	for (int i = 0; i < fileInfo->lights.size(); i++)
@@ -490,7 +463,33 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 		// calculate the L vector in phong equation
 		switch (curLight.getType())
 		{
-			case eLightType::kPointLight:
+		case eLightType::kAttPointLight:
+		case eLightType::kPointLight:
+		{
+			rtPoint lightSource(curLight.m_center.m_x, curLight.m_center.m_y, curLight.m_center.m_z);
+			lightDir = lightSource.subtract(intersection);
+			maxT1 = lightDir.length();
+
+			// for point light, use fatt to indicate "Light Source Attenuation"
+			fatt = 1.f / (curLight.m_c1 + curLight.m_c2 * maxT1 + curLight.m_c3 * maxT1 * maxT1);
+		}
+		break;
+		case eLightType::kDirectionalLight:
+		{
+			lightDir = rtVector3(-curLight.m_center.m_x, -curLight.m_center.m_y, -curLight.m_center.m_z);
+			lightDir.twoNorm();
+		}
+		break;
+		case eLightType::kSpotlight:
+		case eLightType::kAttSpotlight:
+		{
+			rtVector3 vobj = intersection.subtract(curLight.m_center).getTwoNorm();
+			rtVector3 vlight(curLight.m_vec3.m_x, curLight.m_vec3.m_y, curLight.m_vec3.m_z);
+			vlight.twoNorm();
+
+			// check if this spotlight is valid for the single intersection 
+			// then add them to the global lights vector and count the number 
+			if (rtVector3::dotProduct(vlight, vobj) >= std::cos(curLight.m_theta * M_PI / 180.f))
 			{
 				rtPoint lightSource(curLight.m_center.m_x, curLight.m_center.m_y, curLight.m_center.m_z);
 				lightDir = lightSource.subtract(intersection);
@@ -499,38 +498,35 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 				// for point light, use fatt to indicate "Light Source Attenuation"
 				fatt = 1.f / (curLight.m_c1 + curLight.m_c2 * maxT1 + curLight.m_c3 * maxT1 * maxT1);
 			}
+			else
+			{
+				continue;
+			}
 		}
-
-
-		if (fileInfo->lights[i].type == 0)
-		{
-			L.set_vector(-lights[i].x, -lights[i].y, -lights[i].z);
-			L = L.two_norm();
-		}
-		else
-		{
-			
+		break;
 		}
 
 		// calculate the V and H vectors in phong equation
-		Space_vector V = new_ori.subtract(intersection).two_norm();
-		Space_vector H = L.add(V).two_norm();
-		double nl = normal * L;
-		double nh = normal * H;
+		rtVector3 V = newOrigin.subtract(intersection).getTwoNorm();
+		rtVector3 H = lightDir.add(V).getTwoNorm();
+		float nl = rtVector3::dotProduct(normal, lightDir);
+		float nh = rtVector3::dotProduct(normal, H);
 
 		// shoot shadow rays to check shadow
-		double t1 = numeric_limits<double>::infinity();
-		Ray shadow_ray;
-		shadow_ray.set_ray(intersection, L);
-		double x0 = shadow_ray.x;
-		double y0 = shadow_ray.y;
-		double z0 = shadow_ray.z;
-		double xd = shadow_ray.dx;
-		double yd = shadow_ray.dy;
-		double zd = shadow_ray.dz;
-		for (int k = 0; k < spheres.size(); k++)
+		float t1 = std::numeric_limits<float>::infinity();
+		rtRay shadowRay;
+		shadowRay.m_origin = intersection;
+		shadowRay.m_direction = lightDir;
+		double x0 = shadowRay.m_origin.m_x;
+		double y0 = shadowRay.m_origin.m_y;
+		double z0 = shadowRay.m_origin.m_z;
+		double xd = shadowRay.m_direction.m_x;
+		double yd = shadowRay.m_direction.m_y;
+		double zd = shadowRay.m_direction.m_z;
+
+		for (int k = 0; k < fileInfo->spheres.size(); k++)
 		{
-			if (k == n_sphere && is_sphere)
+			if (k == objIndex && isSphere)
 			{
 				continue;
 			}

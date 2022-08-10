@@ -292,28 +292,6 @@ eParseRetType ObjFileReader::parseFile()
 					m_objFileInfo->lights.push_back(light);
 					break;
 				}
-				case eLightType::kAttDirectionalLight:
-				{
-					std::vector<float> vec(9);
-					for (int i = 0; i < 6; i++)
-					{
-						if (iss >> block)
-						{
-							vec[i] = std::stof(block);
-						}
-						else
-						{
-							std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-							std::cout << "Keyword: " << block << " requires 7 floats" << std::endl;
-							return eParseRetType::kEyeKeywordFormatError;
-						}
-					}
-					light.setVector3(rtVector3(vec[0], vec[1], vec[2]));
-					light.setColor(rtColor(vec[3], vec[4], vec[5]));
-					light.setAttAttribute(vec[6], vec[7], vec[8]);
-					m_objFileInfo->lights.push_back(light);
-					break;
-				}
 				case eLightType::kAttSpotlight:
 				{
 					std::vector<float> vec(13);
