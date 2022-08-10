@@ -147,7 +147,7 @@ void rayTracer::ComputePixelColor()
 	}
 }
 
-rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double etai, bool isSphere, int objIndex, double lastEta)
+rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float etai, bool isSphere, int objIndex, float lastEta)
 {
 	auto fileInfo = m_fileReader->getFileInfo();
 	if (recusiveDepth == MAX_RECURSIVE_DEPTH)
@@ -348,6 +348,7 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double
 		if (!name.empty()) // if texture detected
 		{
 			rtColor texelColor;
+			float textureU, textureV;
 			if (!isSphere)
 			{
 				//mapping texture to a triangle
@@ -355,120 +356,301 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double
 				rtVector2 second_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex][1][1] - 1];
 				rtVector2 third_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex][2][1] - 1];
 				// using Barycentric coordinates
-				float textureU, textureV;
 				textureU = (alphas.back() * first_2d.m_x + betas.back() * second_2d.m_x + gammas.back() * third_2d.m_x);
 				textureV = (alphas.back() * first_2d.m_y + betas.back() * second_2d.m_y + gammas.back() * third_2d.m_y);
-				texelColor = m_textureData[name][static_cast<int>(textureV * (m_textureSize[name].m_y - 1.f) + 0.5f) * static_cast<int>(m_textureSize[name].m_x)
-												 + static_cast<int>(textureU * (m_textureSize[name].m_x - 1.f) + 0.5f)];
-				rtMaterial tempMtl((float)texelColor.m_r / 255.f, (double)texelColor.m_g / 255.f, (double)texelColor.m_b / 255.f,
-									temp.m_osr, temp.m_osg, temp.m_osb,
-									temp.m_ka, temp.m_kd, temp.m_ks, temp.m_falloff, temp.m_alpha, temp.m_eta);
-				hit = Phong(tempMtl, closest, objIndex, normal, isSphere, incidence.m_origin);
 			}
 			else
 			{
 				//mapping texture to a sphere
-				double phi = acos((closest.z - spheres[which_object].z) / spheres[which_object].r);
-				double zeta = atan2((closest.y - spheres[which_object].y), (closest.x - spheres[which_object].x));
-				double u_for_texture, v_for_texture;
-				v_for_texture = phi / M_PI;
-				u_for_texture = (zeta + M_PI) / (2 * M_PI);
-				from_texture = arrays_of_textures[index_of_texture][(int)((v_for_texture * (size_of_textures[index_of_texture][1] - 1)) + 0.5)][(int)((u_for_texture * (size_of_textures[index_of_texture][0] - 1) + 0.5))];
-				Mtlcolor this_temp;
-
-
-				this_temp.set_mtlcolor((double)from_texture[0] / 255.0, (double)from_texture[1] / 255.0, (double)from_texture[2] / 255.0, temp.osr, temp.osg, temp.osb, temp.ka, temp.kd, temp.ks, temp.falloff, temp.get_alpha(), temp.get_eta());
-				hit = Phong(this_temp, closest, which_object, normal, is_sphere, incidence.ori());
-
+				float phi = std::acos((closest.m_z - fileInfo->spheres[objIndex].m_center.m_z) / fileInfo->spheres[objIndex].m_radius);
+				float zeta = std::atan2((closest.m_y - fileInfo->spheres[objIndex].m_center.m_y), (closest.m_x - fileInfo->spheres[objIndex].m_center.m_x));
+				float textureU, textureV;
+				textureV = phi / M_PI;
+				textureU = (zeta + M_PI) / (2 * M_PI);
 			}
+			texelColor = m_textureData[name][static_cast<int>(textureV * (m_textureSize[name].m_y - 1.f) + 0.5f) * static_cast<int>(m_textureSize[name].m_x)
+										   + static_cast<int>(textureU * (m_textureSize[name].m_x - 1.f) + 0.5f)];
+			rtMaterial tempMtl((float)texelColor.m_r / 255.f, (double)texelColor.m_g / 255.f, (double)texelColor.m_b / 255.f,
+								temp.m_osr, temp.m_osg, temp.m_osb,
+								temp.m_ka, temp.m_kd, temp.m_ks, temp.m_falloff, temp.m_alpha, temp.m_eta);
+			hit = BlinnPhongShading(tempMtl, closest, objIndex, normal, isSphere, incidence.m_origin);
 		}
 		else // no texture detected, apply normal phong equation
 		{
-			hit = Phong(temp, closest, which_object, normal, is_sphere, incidence.ori());
+			hit = BlinnPhongShading(temp, closest, objIndex, normal, isSphere, incidence.m_origin);
 		}
 
+		rtVector3 forwardEpsilon = incidence.m_direction.scale(t1 + EPSILON);
+		rtPoint forward = rtPoint::add(incidence.m_origin, forwardEpsilon);
 
-		Space_vector litter_for = incidence.raydir().scale(t1 + 0.00005);
-		Point forward = incidence.ori().p_add(litter_for);
+		rtVector3 backwardEpsilon = incidence.m_direction.scale(t1 - EPSILON);
+		rtPoint backward = rtPoint::add(incidence.m_origin, backwardEpsilon);
 
-		Space_vector litter_bac = incidence.raydir().scale(t1 - 0.00005);
-		Point backward = incidence.ori().p_add(litter_bac);
+		rtRay reflection;
+		rtVector3 reflectionDir;
 
-		Ray reflection;
-		Space_vector reflection_dir;
+		float cosphii = std::abs(rtVector3::dotProduct(I, normal));
+		float sinphii = std::pow(1.f - cosphii * cosphii, 0.5f);
+		reflectionDir = normal.scale(cosphii * 2.f).add(incidence.m_direction.getTwoNorm());
+		reflection.m_origin = backward;
+		reflection.m_direction = reflectionDir;
 
-		double cosphii = abs(I * normal);
-		double sinphii = pow(1.0 - cosphii * cosphii, 0.5);
-		reflection_dir = normal.scale(cosphii * 2.0).add(incidence.raydir().two_norm());
-		reflection.set_ray(backward, reflection_dir);
+		float curEta = temp.m_eta;
+		float curAlpha = temp.m_alpha;
 
-		double this_eta = temp.get_eta();
-		double this_alpha = temp.get_alpha();
-
-		/*
-		if (is_sphere)
-		{
-			this_eta = n_mtlcolors[spheres[which_object].get_m()].get_eta();
-			this_alpha = n_mtlcolors[spheres[which_object].get_m()].get_alpha();
-		}
-		else
-		{
-			this_eta = n_mtlcolors[face_mtl[which_object]].get_eta();
-			this_alpha = n_mtlcolors[face_mtl[which_object]].get_alpha();
-		}
-		*/
 		if (exit)
 		{
-			this_eta = last_eta;
+			curEta = lastEta;
 		}
-		double F0 = ((this_eta - etai) / (this_eta + etai)) * ((this_eta - etai) / (this_eta + etai));
-		double Fresnel_reflectance = F0 + (1.0 - F0) * pow((1.0 - cosphii), 5.0);
+		float F0 = ((curEta - etai) / (curEta + etai)) * ((curEta - etai) / (curEta + etai));
+		float FresnelReflectance = F0 + (1.f - F0) * std::pow((1.f - cosphii), 5.f);
 
-		Ray transmission;
-		Space_vector transmission_dir;
-		double first_coff = pow(1.0 - (etai / this_eta) * (etai / this_eta) * (1.0 - cosphii * cosphii), 0.5);
-		transmission_dir = normal.scale(-1).scale(first_coff).add(normal.scale(cosphii * (etai / this_eta))).add(I.scale(-1).scale(etai / this_eta));
-		transmission_dir = transmission_dir.two_norm();
-		if (!is_sphere)
+		rtRay transmission;
+		rtVector3 transmissionDir;
+		if (!isSphere)
 		{
-			transmission_dir = incidence.raydir().two_norm();
-		}
-
-		//cout << (incidence.raydir().two_norm()) * transmission_dir << endl;
-
-		transmission.set_ray(forward, transmission_dir);
-
-		if (is_sphere)
-		{
-			if (sinphii > (this_eta / etai))
-			{
-				hit = hit + (trace_ray(reflection, rec_depth + 1, etai, is_sphere, which_object, etai) * Fresnel_reflectance);
-			}
-			else
-			{
-				Color trans;
-				trans = trace_ray(transmission, rec_depth + 1, this_eta, is_sphere, which_object, etai) * ((1.0 - Fresnel_reflectance) * (1.0 - this_alpha));
-				hit = hit + (trace_ray(reflection, rec_depth + 1, etai, is_sphere, which_object, etai) * Fresnel_reflectance) + trans;
-			}
+			transmissionDir = incidence.m_direction.getTwoNorm();
 		}
 		else
 		{
-			if (sinphii > (this_eta / etai))
-			{
-				hit = hit + (trace_ray(reflection, rec_depth + 1, etai, is_sphere, which_object, etai) * Fresnel_reflectance);
-			}
-			else
-			{
-				Color trans;
-				trans = trace_ray(transmission, rec_depth + 1, etai, is_sphere, which_object, etai) * ((1.0 - Fresnel_reflectance) * (1.0 - this_alpha));
-				hit = hit + (trace_ray(reflection, rec_depth + 1, etai, is_sphere, which_object, etai) * Fresnel_reflectance) + trans;
-			}
+			float firstCoff = std::pow(1.f - (etai / curEta) * (etai / curEta) * (1.f - cosphii * cosphii), 0.5f);
+			rtVector3 transmissionDir = normal.scale(-1.f).scale(firstCoff).add(normal.scale(cosphii * (etai / curEta))).add(I.scale(-1.f).scale(etai / curEta));
+			transmissionDir.twoNorm();
+		}
+
+		transmission.m_origin = forward;
+		transmission.m_direction = transmissionDir;
+
+		if (sinphii > (curEta / etai))
+		{
+			hit = hit + (RecursiveTraceRay(reflection, recusiveDepth + 1, etai, isSphere, objIndex, etai) * FresnelReflectance);
+		}
+		else
+		{
+			rtColor trans;
+			trans = RecursiveTraceRay(transmission, recusiveDepth + 1, isSphere ? curEta : etai, isSphere, objIndex, etai) * ((1.f - FresnelReflectance) * (1.f - curAlpha));
+			hit = hit + (RecursiveTraceRay(reflection, recusiveDepth + 1, etai, isSphere, objIndex, etai) * FresnelReflectance) + trans;
 		}
 	}
 	else
 	{
-		return bkgcolor;
+		return fileInfo->bkgColor;
 	}
 
 	return hit;
+}
+
+rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection, int objIndex, rtVector3& normal, bool isSphere, rtPoint& newOrigin)
+{
+	rtColor ans;
+	rtPoint center;
+
+	// set intial color based on material property
+	double r = mtlColor.m_ka * mtlColor.m_odr;
+	double g = mtlColor.m_ka * mtlColor.m_odg;
+	double b = mtlColor.m_ka * mtlColor.m_odb;
+	int n_spotligs = 0;
+
+	// translate valid spotlights to normal lights for future use
+	for (int i = 0; i < spotlights.size(); i++)
+	{
+
+		Spotlight this_spot = spotlights[i];
+		Space_vector vobj;
+		Space_vector vlight;
+		Point this_ori;
+		Color this_color;
+		this_color.set_color(this_spot.r, this_spot.g, this_spot.b);
+		this_ori.set_point(this_spot.x, this_spot.y, this_spot.z);
+		vobj = intersection.subtract(this_ori).two_norm();
+		vlight.set_vector(this_spot.dirx, this_spot.diry, this_spot.dirz);
+		vlight = vlight.two_norm();
+
+		// check if this spotlight is valid for the single intersection 
+		// then add them to the global lights vector and count the number 
+		if (vlight * vobj >= cos(this_spot.theta * M_PI / (double)180))
+		{
+			Light temp_light;
+			temp_light.set_Light(this_spot.x, this_spot.y, this_spot.z, 1, this_color, this_spot.c1, this_spot.c2, this_spot.c3);
+			n_spotligs++;
+			lights.push_back(temp_light);
+		}
+	}
+
+	// shoot lights to the intersection
+	for (int i = 0; i < lights.size(); i++)
+	{
+		double shadow_flag = 1.0;
+		Space_vector L;
+		double max_t1;
+		double fatt = 1;
+
+		// calculate the L vector in phong equation
+		if (lights[i].type == 0)
+		{
+			L.set_vector(-lights[i].x, -lights[i].y, -lights[i].z);
+			L = L.two_norm();
+		}
+		else
+		{
+			Point light_source;
+			light_source.set_point(lights[i].x, lights[i].y, lights[i].z);
+			L = light_source.subtract(intersection);
+			double length_ori_L = L.length();
+			L = L.two_norm();
+			double length_unit_L = L.length();
+			max_t1 = length_ori_L / length_unit_L;
+
+			// for point light, use fatt to indicate "Light Source Attenuation"
+			fatt = (double)1 / (lights[i].c1 + lights[i].c2 * length_ori_L + lights[i].c3 * length_ori_L * length_ori_L);
+		}
+
+		// calculate the V and H vectors in phong equation
+		Space_vector V = new_ori.subtract(intersection).two_norm();
+		Space_vector H = L.add(V).two_norm();
+		double nl = normal * L;
+		double nh = normal * H;
+
+		// shoot shadow rays to check shadow
+		double t1 = numeric_limits<double>::infinity();
+		Ray shadow_ray;
+		shadow_ray.set_ray(intersection, L);
+		double x0 = shadow_ray.x;
+		double y0 = shadow_ray.y;
+		double z0 = shadow_ray.z;
+		double xd = shadow_ray.dx;
+		double yd = shadow_ray.dy;
+		double zd = shadow_ray.dz;
+		for (int k = 0; k < spheres.size(); k++)
+		{
+			if (k == n_sphere && is_sphere)
+			{
+				continue;
+			}
+
+			double xc = spheres[k].x;
+			double yc = spheres[k].y;
+			double zc = spheres[k].z;
+			double r = spheres[k].r;
+			double A = 1.0;
+			double B = 2.0 * (xd * (x0 - xc) + yd * (y0 - yc) + zd * (z0 - zc));
+			double C = (x0 - xc) * (x0 - xc) + (y0 - yc) * (y0 - yc) + (z0 - zc) * (z0 - zc) - r * r;
+			double delta = B * B - 4.0 * A * C;
+			// check discriminant
+			if (delta == 0)
+			{
+				double temp_t1 = (-B) / (2.0 * A);
+				if (temp_t1 > 0)
+				{
+					if (temp_t1 < t1)
+					{
+						t1 = temp_t1;
+					}
+
+				}
+			}
+			else if (delta > 0)
+			{
+				double temp_t1 = (sqrt(delta) - B) / (2.0 * A);
+				double temp_t2 = (-sqrt(delta) - B) / (2.0 * A);
+
+				if (lights[i].type == 0 && ((temp_t1 > 0 && temp_t1 != numeric_limits<double>::infinity()) || (temp_t2 > 0 && temp_t2 != numeric_limits<double>::infinity())))
+				{
+					shadow_flag = shadow_flag * (1.0 - n_mtlcolors[spheres[k].get_m()].get_alpha());;
+				}
+				else if (lights[i].type == 1 && ((temp_t1 > 0 && temp_t1 < max_t1) || (temp_t2 > 0 && temp_t2 < max_t1)))
+				{
+					shadow_flag = shadow_flag * (1.0 - n_mtlcolors[spheres[k].get_m()].get_alpha());;
+				}
+
+				if ((temp_t1 < t1) && temp_t1 > 0)
+				{
+					t1 = temp_t1;
+				}
+				if ((temp_t2 < t1) && temp_t2 > 0)
+				{
+					t1 = temp_t2;
+				}
+
+
+
+			}
+
+
+		}
+		// shoot shadow rays and check if it intersect with triangles
+		for (int index_tri = 0; index_tri < faces.size(); index_tri++)
+		{
+			if (index_tri == n_sphere && (!is_sphere))
+			{
+				continue;
+			}
+			// same logic when shooting viewing ray
+			Point first_vertex = vertices[faces[index_tri][0][0] - 1];
+			Point second_vertex = vertices[faces[index_tri][1][0] - 1];
+			Point third_vertex = vertices[faces[index_tri][2][0] - 1];
+			Space_vector e1 = second_vertex.subtract(first_vertex);
+			Space_vector e2 = third_vertex.subtract(first_vertex);
+			Space_vector n_for_tri = e1.cross_prod(e2);
+			double A_for_tri = n_for_tri.x;
+			double B_for_tri = n_for_tri.y;
+			double C_for_tri = n_for_tri.z;
+			double D_for_tri = -(first_vertex.x * A_for_tri + first_vertex.y * B_for_tri + first_vertex.z * C_for_tri);
+			double deterimint = A_for_tri * xd + B_for_tri * yd + C_for_tri * zd;
+			if (deterimint <= 0.0000005 && deterimint >= -0.0000005)
+			{
+				continue;
+			}
+			double t_for_tri = -(A_for_tri * x0 + B_for_tri * y0 + C_for_tri * z0 + D_for_tri) / deterimint;
+			if (t_for_tri < 0)
+			{
+				continue;
+			}
+			Point p_for_tri = intersection.p_add(shadow_ray.raydir().scale(t_for_tri));
+			Space_vector e3 = p_for_tri.subtract(second_vertex);
+			Space_vector e4 = p_for_tri.subtract(third_vertex);
+			double totalArea = e1.Area(e2);
+			double aArea = e3.Area(e4);
+			double bArea = e4.Area(e2);
+			double cArea = e1.Area(e3);
+			double alpha = aArea / totalArea;
+			double beta = bArea / totalArea;
+			double gamma = cArea / totalArea;
+			if (alpha < 1 && alpha>0 && beta < 1 && beta>0 && gamma > 0 && gamma < 1 && alpha + beta + gamma - 1 < 0.00005)
+			{
+
+				if (lights[i].type == 0 && t_for_tri > 0 && t_for_tri != numeric_limits<double>::infinity())
+				{
+					shadow_flag = shadow_flag * (1.0 - n_mtlcolors[face_mtl[index_tri]].get_alpha());
+				}
+				else if (lights[i].type == 1 && t_for_tri > 0 && t_for_tri < max_t1)
+				{
+					shadow_flag = shadow_flag * (1.0 - n_mtlcolors[face_mtl[index_tri]].get_alpha());
+				}
+
+
+				if (t_for_tri < t1)
+				{
+					t1 = t_for_tri;
+				}
+
+			}
+
+
+		}
+
+
+		// using phong equation to calculate rgb values
+		r += shadow_flag * fatt * (mtlc.kd * mtlc.odr * max(nl, (double)0) + mtlc.ks * mtlc.osr * pow(max(nh, (double)0), mtlc.falloff));
+		g += shadow_flag * fatt * (mtlc.kd * mtlc.odg * max(nl, (double)0) + mtlc.ks * mtlc.osg * pow(max(nh, (double)0), mtlc.falloff));
+		b += shadow_flag * fatt * (mtlc.kd * mtlc.odb * max(nl, (double)0) + mtlc.ks * mtlc.osb * pow(max(nh, (double)0), mtlc.falloff));
+	}
+	ans.set_color(r, g, b);
+
+	//release all the spotlights in lights vector
+	for (int i = 0; i < n_spotligs; i++)
+	{
+		lights.pop_back();
+	}
+	return ans;
 }

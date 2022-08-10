@@ -57,7 +57,7 @@ public:
 	}
 
 
-private:
+
 	rtPoint m_center;
 	rtColor m_color;
 
@@ -69,5 +69,4 @@ private:
 	float m_c1 = 0.f;
 	float m_c2 = 0.f;
 	float m_c3 = 0.f;
-
 };

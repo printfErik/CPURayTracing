@@ -15,7 +15,9 @@ public:
 	void CreatePixelIndexTo3DPointMap();
 	void CreatePixelIndexToRayMap();
 	void ComputePixelColor();
-	rtColor RecursiveTraceRay(rtRay& incidence, int recusiveDepth, double etai, bool isSphere, int whichObj, double lastEta);
+	rtColor RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float etai, bool isSphere, int whichObj, float lastEta);
+	rtColor BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection, int objIndex, rtVector3& normal, bool isSphere, rtPoint& newOrigin);
+
 
 private:
 
