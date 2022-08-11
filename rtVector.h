@@ -44,6 +44,7 @@ public:
 	rtVector2(float _x, float _y) :
 		m_x(_x), m_y(_y) {}
 
+	bool operator < (const rtVector2& v) const;
 
 	float m_x;
 	float m_y;

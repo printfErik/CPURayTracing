@@ -58,13 +58,13 @@ public:
 
 	void setAttAttribute(float c1, float c2, float c3);
 
-
+	eLightType m_type = eLightType::kUndefined;
 	rtPoint m_center;
 	rtColor m_color;
 
 	rtVector3 m_vec3;
 
-	eLightType m_type = eLightType::kUndefined;
+	
 
 	float m_theta = 0.f;
 	float m_c1 = 0.f;

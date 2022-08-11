@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+
 class rtMaterial
 {
 public:
@@ -7,14 +9,8 @@ public:
 		m_odr(_odr), m_odg(_odg), m_odb(_odb), m_osr(_osr), m_osg(_osg), m_osb(_osb), m_ka(_ka), m_kd(_kd), m_ks(_ks), m_falloff(_falloff), m_alpha(_alpha), m_eta(_eta) {}
 
 	std::string getTextureFile();
-	float get_alpha();
-	float get_eta();
-	void set_alpha(float alpha);
-	void set_eta(float eta);
-
 	void setTextureFile(const std::string& filePath);
 	void setMtlProperties(float _odr, float _odg, float _odb, float _osr, float _osg, float _osb, float _ka, float _kd, float _ks, float _falloff, float _alpha, float _eta);
-
 
 	float m_odr;
 	float m_odg;

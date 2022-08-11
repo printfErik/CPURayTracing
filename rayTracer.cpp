@@ -35,6 +35,7 @@ bool rayTracer::ReadTextureFiles()
 			m_textureSize[texName] = size;
 		}
 	}
+	return true;
 }
 
 bool rayTracer::ComputeUV()
@@ -366,7 +367,6 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 				//mapping texture to a sphere
 				float phi = std::acos((closest.m_z - fileInfo->spheres[objIndex].m_center.m_z) / fileInfo->spheres[objIndex].m_radius);
 				float zeta = std::atan2((closest.m_y - fileInfo->spheres[objIndex].m_center.m_y), (closest.m_x - fileInfo->spheres[objIndex].m_center.m_x));
-				float textureU, textureV;
 				textureV = phi / M_PI;
 				textureU = (zeta + M_PI) / (2 * M_PI);
 			}

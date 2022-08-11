@@ -194,7 +194,8 @@ eParseRetType ObjFileReader::parseFile()
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
-				rtSphere sphere(rtPoint(vec[0], vec[1], vec[2]), vec[3]);
+				rtPoint c(vec[0], vec[1], vec[2]);
+				rtSphere sphere(c, vec[3]);
 				sphere.m_materialIndex = m_objFileInfo->materials.size() - 1;
 				m_objFileInfo->spheres.push_back(sphere);
 			}

@@ -38,6 +38,8 @@ public:
 	std::shared_ptr<ObjFileInfo> getFileInfo();
 	std::string getFileName();
 
+	~ObjFileReader() override {}
+
 private:
 
 	std::shared_ptr<ObjFileInfo> m_objFileInfo;
