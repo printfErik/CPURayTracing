@@ -1,6 +1,13 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
-project ("CPURayTracing")
+set(TARGET_NAME CPURayTracing)
 
-add_executable (CPURayTracing "CPURayTracing.cpp"  "FileReader.cpp" "FileReader.h" "ObjFileReader.cpp" "ObjFileReader.h" "rtVector.cpp" "rtVector.h" "rtColor.cpp" "rtColor.h" "rtMaterial.h" "rtMaterial.cpp" "rtSphere.cpp" "rtSphere.h" "rtPoint.cpp" "rtPoint.h" "rtLight.cpp" "rtLight.h" "PpmFileReader.cpp" "PpmFileReader.h" "rayTracer.cpp" "rayTracer.h" "rtRay.cpp" "rtRay.h")
+project (${TARGET_NAME})
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+file(GLOB RAYTRACING_HEADERS CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
+file(GLOB RAYTRACING_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+
+add_executable (${TARGET_NAME} ${RAYTRACING_HEADERS} ${RAYTRACING_SOURCES})
