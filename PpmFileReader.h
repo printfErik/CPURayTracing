@@ -2,12 +2,13 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include "rtVector.h"
+#include "rtColor.h"
 
-class rtColor;
-class PpmFileReader
+class ppmFileReader
 {
 public:
-	PpmFileReader(const std::string& fileName);
+	ppmFileReader(const std::string& fileName);
 	void getTextureArray(std::vector<rtColor>& texture, rtVector2& size);
 
 private:

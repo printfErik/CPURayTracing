@@ -36,6 +36,7 @@ public:
 	ObjFileReader(const std::string& _fileName);
 	eParseRetType parseFile() override;
 	std::shared_ptr<ObjFileInfo> getFileInfo();
+	std::string getFileName();
 
 private:
 

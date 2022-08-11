@@ -8,6 +8,12 @@ public:
 
 	rtColor operator * (float scale);
 	rtColor operator + (const rtColor& c);
+
+	void clamp();
+	int rtoi();
+	int gtoi();
+	int btoi();
+
 	float m_r;
 	float m_g;
 	float m_b;

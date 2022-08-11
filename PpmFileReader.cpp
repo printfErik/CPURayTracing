@@ -2,12 +2,12 @@
 #include "rtColor.h"
 #include "rtVector.h"
 
-PpmFileReader::PpmFileReader(const std::string& fileName)
+ppmFileReader::ppmFileReader(const std::string & fileName)
 {
 	m_fileName = fileName;
 }
 
-void PpmFileReader::getTextureArray(std::vector<rtColor>& texture, rtVector2& size)
+void ppmFileReader::getTextureArray(std::vector<rtColor>& texture, rtVector2& size)
 {
 	std::ifstream inFile;
 	inFile.open(m_fileName);

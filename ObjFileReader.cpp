@@ -20,6 +20,11 @@ std::shared_ptr<ObjFileInfo> ObjFileReader::getFileInfo()
 	return m_objFileInfo;
 }
 
+std::string ObjFileReader::getFileName() 
+{
+	return m_fileName;
+}
+
 eParseRetType ObjFileReader::parseFile()
 {
 	_ASSERT(!m_objFileInfo);

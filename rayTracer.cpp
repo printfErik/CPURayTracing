@@ -6,7 +6,7 @@
 #include <corecrt_math_defines.h>
 
 static constexpr int MAX_RECURSIVE_DEPTH = 7;
-static constexpr float EPSILON = 0.00000005;
+static constexpr float EPSILON = 0.00000005f;
 
 bool rayTracer::Init(const std::string& fileName)
 {
@@ -27,10 +27,10 @@ bool rayTracer::ReadTextureFiles()
 		std::string texName = fileInfo->materials[i].getTextureFile();
 		if (!texName.empty())
 		{
-			std::unique_ptr<PpmFileReader> ppmFileReader = std::make_unique<PpmFileReader>(texName);
+			std::unique_ptr<ppmFileReader> ppmFileReaderInstance = std::make_unique<ppmFileReader>(texName);
 			std::vector<rtColor> texture;
 			rtVector2 size;
-			ppmFileReader->getTextureArray(texture, size);
+			ppmFileReaderInstance->getTextureArray(texture, size);
 			m_textureData[texName] = texture;
 			m_textureSize[texName] = size;
 		}
@@ -63,7 +63,7 @@ bool rayTracer::ComputeAspectRatioAndRenderPlane()
 
 	float aspectRatio = fileInfo->imageSize.m_x / fileInfo->imageSize.m_y;
 	float distance = 5.f; // random number
-	float height = 2.f * distance * std::tan(fileInfo->vFov * M_PI / 360.f);
+	float height = 2.f * distance * std::tan(fileInfo->vFov * static_cast<float>(M_PI) / 360.f);
 	float width = height * aspectRatio;
 	
 	rtVector3 n = fileInfo->viewDir;
@@ -82,7 +82,7 @@ void rayTracer::InitPixelArray()
 {
 	auto fileInfo = m_fileReader->getFileInfo();
 
-	m_pixels.resize(fileInfo->imageSize.m_x, std::vector<rtColor>(fileInfo->imageSize.m_y, fileInfo->bkgColor));
+	m_pixels.resize(static_cast<int>(fileInfo->imageSize.m_x), std::vector<rtColor>(static_cast<int>(fileInfo->imageSize.m_y), fileInfo->bkgColor));
 
 	for (int i = 0; i < fileInfo->imageSize.m_x; i++)
 	{
@@ -142,7 +142,9 @@ void rayTracer::ComputePixelColor()
 		{
 			rtVector2 index(i, j);
 			rtRay ray = m_imgIndex2RayMap[index];
-			rtColor pixelColor = RecursiveTraceRay(ray, )
+			rtColor pixelColor = RecursiveTraceRay(ray, 0, 1.f, true, -1, 1.f);
+			pixelColor.clamp();
+			m_pixels[i][j] = pixelColor;
 		}
 	}
 }
@@ -274,13 +276,13 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 		rtPoint hitPoint = rtPoint::add(incidence.m_origin, incidence.m_direction.scale(tTri));
 		rtVector3 e3 = hitPoint.subtract(secondVertex);
 		rtVector3 e4 = hitPoint.subtract(thirdVertex);
-		double totalArea = rtVector3::area(e1, e2);
-		double aArea = rtVector3::area(e3, e4);
-		double bArea = rtVector3::area(e4, e2);
-		double cArea = rtVector3::area(e1, e3);
-		double alpha = aArea / totalArea;
-		double beta = bArea / totalArea;
-		double gamma = cArea / totalArea;
+		float totalArea = rtVector3::area(e1, e2);
+		float aArea = rtVector3::area(e3, e4);
+		float bArea = rtVector3::area(e4, e2);
+		float cArea = rtVector3::area(e1, e3);
+		float alpha = aArea / totalArea;
+		float beta = bArea / totalArea;
+		float gamma = cArea / totalArea;
 
 		// determine Barycentric coordinates
 		if (alpha < 1 && alpha > 0 && beta < 1 && beta > 0 && gamma > 0 && gamma < 1 && alpha + beta + gamma - 1 < EPSILON)
@@ -370,7 +372,7 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 			}
 			texelColor = m_textureData[name][static_cast<int>(textureV * (m_textureSize[name].m_y - 1.f) + 0.5f) * static_cast<int>(m_textureSize[name].m_x)
 										   + static_cast<int>(textureU * (m_textureSize[name].m_x - 1.f) + 0.5f)];
-			rtMaterial tempMtl((float)texelColor.m_r / 255.f, (double)texelColor.m_g / 255.f, (double)texelColor.m_b / 255.f,
+			rtMaterial tempMtl(texelColor.m_r / 255.f, texelColor.m_g / 255.f, texelColor.m_b / 255.f,
 								temp.m_osr, temp.m_osg, temp.m_osb,
 								temp.m_ka, temp.m_kd, temp.m_ks, temp.m_falloff, temp.m_alpha, temp.m_eta);
 			hit = BlinnPhongShading(tempMtl, closest, objIndex, normal, isSphere, incidence.m_origin);
@@ -443,7 +445,6 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection, int objIndex, rtVector3& normal, bool isSphere, rtPoint& newOrigin)
 {
 	auto fileInfo = m_fileReader->getFileInfo();
-	rtColor ans;
 	rtPoint center;
 
 	// set intial color based on material property
@@ -517,12 +518,12 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 		rtRay shadowRay;
 		shadowRay.m_origin = intersection;
 		shadowRay.m_direction = lightDir;
-		double x0 = shadowRay.m_origin.m_x;
-		double y0 = shadowRay.m_origin.m_y;
-		double z0 = shadowRay.m_origin.m_z;
-		double xd = shadowRay.m_direction.m_x;
-		double yd = shadowRay.m_direction.m_y;
-		double zd = shadowRay.m_direction.m_z;
+		float x0 = shadowRay.m_origin.m_x;
+		float y0 = shadowRay.m_origin.m_y;
+		float z0 = shadowRay.m_origin.m_z;
+		float xd = shadowRay.m_direction.m_x;
+		float yd = shadowRay.m_direction.m_y;
+		float zd = shadowRay.m_direction.m_z;
 
 		for (int k = 0; k < fileInfo->spheres.size(); k++)
 		{
@@ -531,129 +532,143 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 				continue;
 			}
 
-			double xc = spheres[k].x;
-			double yc = spheres[k].y;
-			double zc = spheres[k].z;
-			double r = spheres[k].r;
-			double A = 1.0;
-			double B = 2.0 * (xd * (x0 - xc) + yd * (y0 - yc) + zd * (z0 - zc));
-			double C = (x0 - xc) * (x0 - xc) + (y0 - yc) * (y0 - yc) + (z0 - zc) * (z0 - zc) - r * r;
-			double delta = B * B - 4.0 * A * C;
-			// check discriminant
-			if (delta == 0)
-			{
-				double temp_t1 = (-B) / (2.0 * A);
-				if (temp_t1 > 0)
-				{
-					if (temp_t1 < t1)
-					{
-						t1 = temp_t1;
-					}
+			float xc = fileInfo->spheres[k].m_center.m_x;
+			float yc = fileInfo->spheres[k].m_center.m_y;
+			float zc = fileInfo->spheres[k].m_center.m_z;
+			float r = fileInfo->spheres[k].m_radius;
 
+			float A = 1.f;
+			float B = 2.f * (xd * (x0 - xc) + yd * (y0 - yc) + zd * (z0 - zc));
+			float C = (x0 - xc) * (x0 - xc) + (y0 - yc) * (y0 - yc) + (z0 - zc) * (z0 - zc) - r * r;
+			float delta = B * B - 4.f * A * C;
+
+			// check discriminant
+			if (delta <= EPSILON && delta >= -EPSILON)
+			{
+				float temp_t1 = (-B) / (2.f * A);
+				if (temp_t1 > 0 && temp_t1 < t1)
+				{
+					t1 = temp_t1;
 				}
 			}
-			else if (delta > 0)
+			else if (delta > EPSILON)
 			{
-				double temp_t1 = (sqrt(delta) - B) / (2.0 * A);
-				double temp_t2 = (-sqrt(delta) - B) / (2.0 * A);
+				float temp_t1 = (std::sqrt(delta) - B) / (2.f * A);
+				float temp_t2 = (-std::sqrt(delta) - B) / (2.f * A);
 
-				if (lights[i].type == 0 && ((temp_t1 > 0 && temp_t1 != numeric_limits<double>::infinity()) || (temp_t2 > 0 && temp_t2 != numeric_limits<double>::infinity())))
+				float comparator = curLight.getType() == eLightType::kDirectionalLight ? std::numeric_limits<float>::infinity() : maxT1;
+				if ((temp_t1 > 0 && temp_t1 != comparator) || (temp_t2 > 0 && temp_t2 != comparator))
 				{
-					shadow_flag = shadow_flag * (1.0 - n_mtlcolors[spheres[k].get_m()].get_alpha());;
-				}
-				else if (lights[i].type == 1 && ((temp_t1 > 0 && temp_t1 < max_t1) || (temp_t2 > 0 && temp_t2 < max_t1)))
-				{
-					shadow_flag = shadow_flag * (1.0 - n_mtlcolors[spheres[k].get_m()].get_alpha());;
+					shadowMask = shadowMask * (1.f - fileInfo->materials[fileInfo->spheres[k].m_materialIndex].m_alpha);
 				}
 
 				if ((temp_t1 < t1) && temp_t1 > 0)
 				{
 					t1 = temp_t1;
 				}
+
 				if ((temp_t2 < t1) && temp_t2 > 0)
 				{
 					t1 = temp_t2;
 				}
-
-
-
 			}
-
-
 		}
 		// shoot shadow rays and check if it intersect with triangles
-		for (int index_tri = 0; index_tri < faces.size(); index_tri++)
+		for (int triIndex = 0; triIndex < fileInfo->faces.size(); triIndex++)
 		{
-			if (index_tri == n_sphere && (!is_sphere))
+			if (triIndex == objIndex && (!isSphere))
 			{
 				continue;
 			}
 			// same logic when shooting viewing ray
-			Point first_vertex = vertices[faces[index_tri][0][0] - 1];
-			Point second_vertex = vertices[faces[index_tri][1][0] - 1];
-			Point third_vertex = vertices[faces[index_tri][2][0] - 1];
-			Space_vector e1 = second_vertex.subtract(first_vertex);
-			Space_vector e2 = third_vertex.subtract(first_vertex);
-			Space_vector n_for_tri = e1.cross_prod(e2);
-			double A_for_tri = n_for_tri.x;
-			double B_for_tri = n_for_tri.y;
-			double C_for_tri = n_for_tri.z;
-			double D_for_tri = -(first_vertex.x * A_for_tri + first_vertex.y * B_for_tri + first_vertex.z * C_for_tri);
-			double deterimint = A_for_tri * xd + B_for_tri * yd + C_for_tri * zd;
-			if (deterimint <= 0.0000005 && deterimint >= -0.0000005)
+			rtPoint firstVertex = fileInfo->verteices[fileInfo->faces[triIndex][0][0] - 1];
+			rtPoint secondVertex = fileInfo->verteices[fileInfo->faces[triIndex][1][0] - 1];;
+			rtPoint thirdVertex = fileInfo->verteices[fileInfo->faces[triIndex][2][0] - 1];;
+			rtVector3 e1 = secondVertex.subtract(firstVertex);
+			rtVector3 e2 = thirdVertex.subtract(firstVertex);
+			rtVector3 normal = rtVector3::crossProduct(e1, e2);
+			float A = normal.m_x;
+			float B = normal.m_y;
+			float C = normal.m_z;
+			float D = -(firstVertex.m_x * A + firstVertex.m_y * B + firstVertex.m_z * C);
+			float deterimint = A * xd + B * yd + C * zd;
+			if (deterimint <= EPSILON && deterimint >= -EPSILON)
 			{
 				continue;
 			}
-			double t_for_tri = -(A_for_tri * x0 + B_for_tri * y0 + C_for_tri * z0 + D_for_tri) / deterimint;
-			if (t_for_tri < 0)
+			float triT = -(A * x0 + B * y0 + C * z0 + D) / deterimint;
+			if (triT < 0)
 			{
 				continue;
 			}
-			Point p_for_tri = intersection.p_add(shadow_ray.raydir().scale(t_for_tri));
-			Space_vector e3 = p_for_tri.subtract(second_vertex);
-			Space_vector e4 = p_for_tri.subtract(third_vertex);
-			double totalArea = e1.Area(e2);
-			double aArea = e3.Area(e4);
-			double bArea = e4.Area(e2);
-			double cArea = e1.Area(e3);
-			double alpha = aArea / totalArea;
-			double beta = bArea / totalArea;
-			double gamma = cArea / totalArea;
-			if (alpha < 1 && alpha>0 && beta < 1 && beta>0 && gamma > 0 && gamma < 1 && alpha + beta + gamma - 1 < 0.00005)
+			rtPoint p_for_tri = rtPoint::add(intersection, shadowRay.m_direction.scale(triT));
+			rtVector3 e3 = p_for_tri.subtract(secondVertex);
+			rtVector3 e4 = p_for_tri.subtract(thirdVertex);
+			float totalArea = rtVector3::area(e1, e2);
+			float aArea = rtVector3::area(e3, e4);
+			float bArea = rtVector3::area(e4, e2);
+			float cArea = rtVector3::area(e1, e3);
+			float alpha = aArea / totalArea;
+			float beta = bArea / totalArea;
+			float gamma = cArea / totalArea;
+			if (alpha < 1.f && alpha > 0.f && beta < 1.f && beta > 0.f && gamma > 0.f && gamma < 1.f && alpha + beta + gamma - 1 < EPSILON)
 			{
+				float comparator = curLight.getType() == eLightType::kDirectionalLight ? std::numeric_limits<float>::infinity() : maxT1;
 
-				if (lights[i].type == 0 && t_for_tri > 0 && t_for_tri != numeric_limits<double>::infinity())
+				if (triT > 0 && triT < comparator)
 				{
-					shadow_flag = shadow_flag * (1.0 - n_mtlcolors[face_mtl[index_tri]].get_alpha());
-				}
-				else if (lights[i].type == 1 && t_for_tri > 0 && t_for_tri < max_t1)
-				{
-					shadow_flag = shadow_flag * (1.0 - n_mtlcolors[face_mtl[index_tri]].get_alpha());
+					shadowMask = shadowMask * (1.f - fileInfo->materials[fileInfo->faceMaterialIndexs[triIndex]].m_alpha);
 				}
 
-
-				if (t_for_tri < t1)
+				if (triT < t1 && triT > 0) // todo might not correct
 				{
-					t1 = t_for_tri;
+					t1 = triT;
 				}
-
 			}
-
-
 		}
 
-
 		// using phong equation to calculate rgb values
-		r += shadow_flag * fatt * (mtlc.kd * mtlc.odr * max(nl, (double)0) + mtlc.ks * mtlc.osr * pow(max(nh, (double)0), mtlc.falloff));
-		g += shadow_flag * fatt * (mtlc.kd * mtlc.odg * max(nl, (double)0) + mtlc.ks * mtlc.osg * pow(max(nh, (double)0), mtlc.falloff));
-		b += shadow_flag * fatt * (mtlc.kd * mtlc.odb * max(nl, (double)0) + mtlc.ks * mtlc.osb * pow(max(nh, (double)0), mtlc.falloff));
+		r += shadowMask * fatt * (mtlColor.m_kd * mtlColor.m_odr * std::max(nl, 0.f) + mtlColor.m_ks * mtlColor.m_osr * std::pow(std::max(nh, 0.f), mtlColor.m_falloff));
+		g += shadowMask * fatt * (mtlColor.m_kd * mtlColor.m_odg * std::max(nl, 0.f) + mtlColor.m_ks * mtlColor.m_osg * std::pow(std::max(nh, 0.f), mtlColor.m_falloff));
+		b += shadowMask * fatt * (mtlColor.m_kd * mtlColor.m_odb * std::max(nl, 0.f) + mtlColor.m_ks * mtlColor.m_osb * std::pow(std::max(nh, 0.f), mtlColor.m_falloff));
 	}
-	ans.set_color(r, g, b);
-
-	//release all the spotlights in lights vector
-	for (int i = 0; i < n_spotligs; i++)
-	{
-		lights.pop_back();
-	}
+	rtColor ans(r, g, b);
 	return ans;
+}
+
+void rayTracer::OutputFinalImage()
+{
+	std::string fileName = m_fileReader->getFileName();
+	for (int c = fileName.length() - 1; c >= 0; c--)
+	{
+		if (fileName[c] != '.')
+		{
+			fileName.pop_back();
+		}
+		else
+		{
+			fileName.pop_back();
+			break;
+		}
+	}
+	std::string outfileName = fileName + ".ppm";
+	std::ofstream outfile(outfileName);
+	outfile << "P3\n";
+	auto fileInfo = m_fileReader->getFileInfo();
+	outfile << static_cast<int>(fileInfo->imageSize.m_x) << ' ' << static_cast<int>(fileInfo->imageSize.m_y) << '\n';
+	outfile << "255\n";
+
+	// output the whole img
+	for (int j = 0; j < static_cast<int>(fileInfo->imageSize.m_y); j++)
+	{
+		for (int i = 0; i < static_cast<int>(fileInfo->imageSize.m_x); i++)
+		{
+			if ((i + j * static_cast<int>(fileInfo->imageSize.m_x)) != 0 && (i + j * static_cast<int>(fileInfo->imageSize.m_x)) % 5 == 0)
+			{
+				outfile << "\n"; // 5 pixels one line
+			}
+			outfile << m_pixels[i][j].rtoi() << " " << m_pixels[i][j].gtoi() << " " << m_pixels[i][j].btoi() << " ";
+		}
+	}
+	outfile.close();
 }
