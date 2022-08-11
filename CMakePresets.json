@@ -1,0 +1,47 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "Windows",
+      "generator": "Ninja Multi-Config",
+      "cmakeExecutable": "${sourceDir}/../tools/BuildTool/Cmake/bin/cmake.exe",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": {
+          "value": "${sourceDir}/../tools/BuildTool/llvm/bin/clang.exe",
+          "type": "path"
+        },
+        "CMAKE_CXX_COMPILER": {
+          "value": "${sourceDir}/../tools/BuildTool/llvm/bin/clang++.exe",
+          "type": "path"
+        },
+        "CMAKE_RC_COMPILER": {
+          "value": "${sourceDir}/../tools/BuildTool/llvm/bin/llvm-rc.exe",
+          "type": "path"
+        },
+        "CMAKE_MAKE_PROGRAM": {
+          "value": "${sourceDir}/../tools/BuildTool/CMake/bin/ninja.exe",
+          "type": "path"
+        },
+        "CMAKE_CONFIGURATION_TYPES": "Debug;RelWithDebInfo;Profile"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "Debug",
+      "configurePreset": "Windows",
+      "configuration": "Debug"
+    },
+    {
+      "name": "Release",
+      "configurePreset": "Windows",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "Profile",
+      "configurePreset": "Windows",
+      "configuration": "Profile"
+    }
+  ]
+}
