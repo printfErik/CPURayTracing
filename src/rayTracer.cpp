@@ -95,17 +95,17 @@ void rayTracer::InitPixelArray()
 void rayTracer::CreatePixelIndexTo3DPointMap()
 {
 	auto fileInfo = m_fileReader->getFileInfo();
-	rtVector3 d_h = m_ur.subtract(m_ul).scale(1.f / fileInfo->imageSize.m_x);
-	rtVector3 d_v = m_ll.subtract(m_ul).scale(1.f / fileInfo->imageSize.m_y);
+	rtVector3 d_h = m_ur.subtract(m_ul).scale(1.f / static_cast<float>(fileInfo->imageSize.m_x));
+	rtVector3 d_v = m_ll.subtract(m_ul).scale(1.f / static_cast<float>(fileInfo->imageSize.m_y));
 
-	rtVector3 d_ch = m_ur.subtract(m_ul).scale(1.f / (2.f * fileInfo->imageSize.m_x));
-	rtVector3 d_cv = m_ll.subtract(m_ul).scale(1.f / (2.f * fileInfo->imageSize.m_y));
+	rtVector3 d_ch = m_ur.subtract(m_ul).scale(1.f / (2.f * static_cast<float>(fileInfo->imageSize.m_x)));
+	rtVector3 d_cv = m_ll.subtract(m_ul).scale(1.f / (2.f * static_cast<float>(fileInfo->imageSize.m_y)));
 	
 	for (int i = 0; i < fileInfo->imageSize.m_x; i++)
 	{
 		for (int j = 0; j < fileInfo->imageSize.m_y; j++)
 		{
-			rtPoint p = rtPoint::add(m_ul, d_h.scale((float)i).add(d_v.scale((float)j)).add(d_ch).add(d_cv));
+			rtPoint p = rtPoint::add(rtPoint::add(rtPoint::add(rtPoint::add(m_ul, d_h.scale((float)i)), d_v.scale((float)j)), d_ch), d_cv);
 			rtVector2<int> index(i, j);
 			m_imgIndex2PointMap[index] = p;
 		}
@@ -642,15 +642,15 @@ void rayTracer::OutputFinalImage(const std::string& outFolderName)
 	std::ofstream outfile(outfileName);
 	outfile << "P3\n";
 	auto fileInfo = m_fileReader->getFileInfo();
-	outfile << static_cast<int>(fileInfo->imageSize.m_x) << ' ' << static_cast<int>(fileInfo->imageSize.m_y) << '\n';
+	outfile << fileInfo->imageSize.m_x << ' ' << fileInfo->imageSize.m_y << '\n';
 	outfile << "255\n";
 
 	// output the whole img
-	for (int j = 0; j < static_cast<int>(fileInfo->imageSize.m_y); j++)
+	for (int j = 0; j < fileInfo->imageSize.m_y; j++)
 	{
-		for (int i = 0; i < static_cast<int>(fileInfo->imageSize.m_x); i++)
+		for (int i = 0; i < fileInfo->imageSize.m_x; i++)
 		{
-			if ((i + j * static_cast<int>(fileInfo->imageSize.m_x)) != 0 && (i + j * static_cast<int>(fileInfo->imageSize.m_x)) % 5 == 0)
+			if ((i + j * fileInfo->imageSize.m_x) != 0 && (i + j * fileInfo->imageSize.m_x) % 5 == 0)
 			{
 				outfile << "\n"; // 5 pixels one line
 			}

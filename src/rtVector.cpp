@@ -73,7 +73,7 @@ float rtVector3::area(const rtVector3& v1, const rtVector3& v2)
 	float x = v1.m_y * v2.m_z - v1.m_z * v2.m_y;
 	float y = v1.m_z * v2.m_x - v1.m_x * v2.m_z;
 	float z = v1.m_x * v2.m_y - v1.m_y * v2.m_x;
-	return std::sqrt(x * x + y * y + z * z);
+	return 0.5f * std::sqrt(x * x + y * y + z * z);
 }
 
 float rtVector3::length()
