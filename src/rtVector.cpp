@@ -81,7 +81,3 @@ float rtVector3::length()
 	return std::sqrt(m_x * m_x + m_y * m_y + m_z * m_z);
 }
 
-bool rtVector2::operator < (const rtVector2& v) const
-{
-	return (m_x < v.m_x) || (m_x == v.m_x && m_y < v.m_y);
-}

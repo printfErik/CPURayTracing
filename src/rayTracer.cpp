@@ -1,7 +1,7 @@
 #include "rayTracer.h"
 #include "PpmFileReader.h"
 #include <iostream>
-
+#include <filesystem>
 #include <cmath>
 #include <corecrt_math_defines.h>
 
@@ -29,7 +29,7 @@ bool rayTracer::ReadTextureFiles()
 		{
 			std::unique_ptr<ppmFileReader> ppmFileReaderInstance = std::make_unique<ppmFileReader>(texName);
 			std::vector<rtColor> texture;
-			rtVector2 size;
+			rtVector2<int> size;
 			ppmFileReaderInstance->getTextureArray(texture, size);
 			m_textureData[texName] = texture;
 			m_textureSize[texName] = size;
@@ -43,7 +43,7 @@ bool rayTracer::ComputeUV()
 	auto fileInfo = m_fileReader->getFileInfo();
 
 	// check viewDir and upDir are not parallel
-	m_u = rtVector3::crossProduct(fileInfo->upDir, fileInfo->viewDir);
+	m_u = rtVector3::crossProduct(fileInfo->viewDir, fileInfo->upDir);
 
 	if (m_u.m_x == 0.f && m_u.m_y == 0.f && m_u.m_z == 0.f)
 	{
@@ -67,9 +67,7 @@ bool rayTracer::ComputeAspectRatioAndRenderPlane()
 	float height = 2.f * distance * std::tan(fileInfo->vFov * static_cast<float>(M_PI) / 360.f);
 	float width = height * aspectRatio;
 	
-	rtVector3 n = fileInfo->viewDir;
-	n.twoNorm();
-
+	rtVector3 n = fileInfo->viewDir.getTwoNorm();
 	rtPoint center = rtPoint::add(fileInfo->eye, n.scale(distance));
 	m_ul = rtPoint::add(rtPoint::add(center, m_u.scale(-width / 2.f)), m_v.scale(height / 2.f));
 	m_ur = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(width / 2.f).add(m_v.scale(height / 2.f))));
@@ -108,7 +106,7 @@ void rayTracer::CreatePixelIndexTo3DPointMap()
 		for (int j = 0; j < fileInfo->imageSize.m_y; j++)
 		{
 			rtPoint p = rtPoint::add(m_ul, d_h.scale((float)i).add(d_v.scale((float)j)).add(d_ch).add(d_cv));
-			rtVector2 index(i, j);
+			rtVector2<int> index(i, j);
 			m_imgIndex2PointMap[index] = p;
 		}
 	}
@@ -122,7 +120,7 @@ void rayTracer::CreatePixelIndexToRayMap()
 	{
 		for (int j = 0; j < fileInfo->imageSize.m_y; j++)
 		{
-			rtVector2 index(i, j);
+			rtVector2<int> index(i, j);
 			rtPoint end = m_imgIndex2PointMap[index];
 			rtVector3 rayDir = end.subtract(fileInfo->eye);
 			rayDir.twoNorm();
@@ -141,7 +139,7 @@ void rayTracer::ComputePixelColor()
 	{
 		for (int j = 0; j < fileInfo->imageSize.m_y; j++)
 		{
-			rtVector2 index(i, j);
+			rtVector2<int> index(i, j);
 			rtRay ray = m_imgIndex2RayMap[index];
 			rtColor pixelColor = RecursiveTraceRay(ray, 0, 1.f, true, -1, 1.f);
 			pixelColor.clamp();
@@ -204,39 +202,39 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 
 		float delta = B * B - 4.f * A * C;
 
-		if (delta <= EPSILON && delta >= -EPSILON)// (delta close to zero)
+		if (delta == 0.f)// (delta close to zero)
 		{
 			float tempT = (-B) / (2.f * A);
-			if (tempT < t1 && tempT > EPSILON)
+			if (tempT < t1 && tempT > 0.0000005)
 			{
 				t1 = tempT;
-				objIndex = sphereIndex;
+				objIndex_ = sphereIndex;
 			}
 			else 
 			{
 				total++;
 			}
 		}
-		else if (delta > EPSILON)
+		else if (delta > 0)
 		{
 			float tempT1 = (std::sqrt(delta) - B) / (2.f * A);
 			float tempT2 = (-std::sqrt(delta) - B) / (2.f * A);
 			bool isHit = false;
-			if ((tempT1 < t1) && tempT1 > EPSILON)
+			if ((tempT1 < t1) && tempT1 > 0.0000005)
 			{
 				t1 = tempT1;
-				objIndex = sphereIndex;
+				objIndex_ = sphereIndex;
 				isHit = true;
 			}
 
-			if ((tempT2 < t1) && tempT2 > EPSILON)
+			if ((tempT2 < t1) && tempT2 > 0.0000005)
 			{
 				t1 = tempT2;
-				objIndex = sphereIndex;
+				objIndex_ = sphereIndex;
 				isHit = true;
 			}
 
-			if (isHit)
+			if (!isHit)
 			{
 				total++;
 			}
@@ -263,7 +261,7 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 		float deterimint = A * incidence.m_direction.m_x + B * incidence.m_direction.m_y + C * incidence.m_direction.m_z;
 
 		// check if viewdir is parallel to the surface
-		if (deterimint < EPSILON && deterimint > -EPSILON)
+		if (deterimint <= EPSILON && deterimint >= -EPSILON)
 		{
 			total++;
 			continue;
@@ -289,8 +287,8 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 		if (alpha < 1 && alpha > 0 && beta < 1 && beta > 0 && gamma > 0 && gamma < 1 && alpha + beta + gamma - 1 < EPSILON)
 		{
 			t1 = tTri;
-			isSphere = false;
-			objIndex = triangleIndex;
+			isSphere_ = false;
+			objIndex_ = triangleIndex;
 			alphas.push_back(alpha);
 			betas.push_back(beta);
 			gammas.push_back(gamma);
@@ -316,24 +314,23 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 		}
 	}
 	// if we detect an intersection,find this point and change img color
-	if (total != fileInfo->spheres.size() + fileInfo->faces.size())
+	if (total != (fileInfo->spheres.size() + fileInfo->faces.size()))
 	{
 		rtVector3 I = incidence.m_direction.getTwoNorm().scale(-1);
 		rtVector3 rayDir = incidence.m_direction.scale(t1);
 		rtPoint closest = rtPoint::add(incidence.m_origin, rayDir);
 		rtMaterial temp;
 		rtVector3 normal;
-		if (isSphere)
+		if (isSphere_)
 		{
 			// compute normal vector for sphere which will be used in phong equation
-			temp = fileInfo->materials[fileInfo->spheres[objIndex].m_materialIndex];
-			rtPoint sphereCenter(fileInfo->spheres[objIndex].m_center.m_x, fileInfo->spheres[objIndex].m_center.m_y, fileInfo->spheres[objIndex].m_center.m_z);
-			normal = closest.subtract(sphereCenter).getTwoNorm();
+			temp = fileInfo->materials[fileInfo->spheres[objIndex_].m_materialIndex];
+			normal = closest.subtract(fileInfo->spheres[objIndex_].m_center).getTwoNorm();
 		}
 		else
 		{
 			// compute normal vector for triangle which will be used in phong equation
-			temp = fileInfo->materials[fileInfo->faceMaterialIndexs[objIndex]];
+			temp = fileInfo->materials[fileInfo->faceMaterialIndexs[objIndex_]];
 			normal = triNormals.back().getTwoNorm();
 		}
 
@@ -342,7 +339,7 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 			normal = normal.scale(-1);
 		}
 
-		if (isSphere && (isSphere == isSphere_) && (objIndex == objIndex_))
+		if (isSphere_ && (isSphere_ == isSphere) && (objIndex == objIndex_))
 		{
 			exit = true;
 		}
@@ -352,12 +349,12 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 		{
 			rtColor texelColor;
 			float textureU, textureV;
-			if (!isSphere)
+			if (!isSphere_)
 			{
 				//mapping texture to a triangle
-				rtVector2 first_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex][0][1] - 1];
-				rtVector2 second_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex][1][1] - 1];
-				rtVector2 third_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex][2][1] - 1];
+				rtVector2<float> first_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][0][1] - 1];
+				rtVector2<float> second_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][1][1] - 1];
+				rtVector2<float> third_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][2][1] - 1];
 				// using Barycentric coordinates
 				textureU = (alphas.back() * first_2d.m_x + betas.back() * second_2d.m_x + gammas.back() * third_2d.m_x);
 				textureV = (alphas.back() * first_2d.m_y + betas.back() * second_2d.m_y + gammas.back() * third_2d.m_y);
@@ -365,27 +362,27 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 			else
 			{
 				//mapping texture to a sphere
-				float phi = std::acos((closest.m_z - fileInfo->spheres[objIndex].m_center.m_z) / fileInfo->spheres[objIndex].m_radius);
-				float zeta = std::atan2((closest.m_y - fileInfo->spheres[objIndex].m_center.m_y), (closest.m_x - fileInfo->spheres[objIndex].m_center.m_x));
-				textureV = phi / M_PI;
-				textureU = (zeta + M_PI) / (2 * M_PI);
+				float phi = std::acos((closest.m_z - fileInfo->spheres[objIndex_].m_center.m_z) / fileInfo->spheres[objIndex_].m_radius);
+				float zeta = std::atan2((closest.m_y - fileInfo->spheres[objIndex_].m_center.m_y), (closest.m_x - fileInfo->spheres[objIndex_].m_center.m_x));
+				textureV = phi / static_cast<float>(M_PI);
+				textureU = (zeta + static_cast<float>(M_PI)) / (2.f * static_cast<float>(M_PI));
 			}
 			texelColor = m_textureData[name][static_cast<int>(textureV * (m_textureSize[name].m_y - 1.f) + 0.5f) * static_cast<int>(m_textureSize[name].m_x)
 										   + static_cast<int>(textureU * (m_textureSize[name].m_x - 1.f) + 0.5f)];
 			rtMaterial tempMtl(texelColor.m_r / 255.f, texelColor.m_g / 255.f, texelColor.m_b / 255.f,
 								temp.m_osr, temp.m_osg, temp.m_osb,
 								temp.m_ka, temp.m_kd, temp.m_ks, temp.m_falloff, temp.m_alpha, temp.m_eta);
-			hit = BlinnPhongShading(tempMtl, closest, objIndex, normal, isSphere, incidence.m_origin);
+			hit = BlinnPhongShading(tempMtl, closest, objIndex_, normal, isSphere_, incidence.m_origin);
 		}
 		else // no texture detected, apply normal phong equation
 		{
-			hit = BlinnPhongShading(temp, closest, objIndex, normal, isSphere, incidence.m_origin);
+			hit = BlinnPhongShading(temp, closest, objIndex_, normal, isSphere_, incidence.m_origin);
 		}
 
-		rtVector3 forwardEpsilon = incidence.m_direction.scale(t1 + EPSILON);
+		rtVector3 forwardEpsilon = incidence.m_direction.scale(t1 + 0.00005);
 		rtPoint forward = rtPoint::add(incidence.m_origin, forwardEpsilon);
 
-		rtVector3 backwardEpsilon = incidence.m_direction.scale(t1 - EPSILON);
+		rtVector3 backwardEpsilon = incidence.m_direction.scale(t1 - 0.00005);
 		rtPoint backward = rtPoint::add(incidence.m_origin, backwardEpsilon);
 
 		rtRay reflection;
@@ -409,7 +406,7 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 
 		rtRay transmission;
 		rtVector3 transmissionDir;
-		if (!isSphere)
+		if (!isSphere_)
 		{
 			transmissionDir = incidence.m_direction.getTwoNorm();
 		}
@@ -425,13 +422,13 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 
 		if (sinphii > (curEta / etai))
 		{
-			hit = hit + (RecursiveTraceRay(reflection, recusiveDepth + 1, etai, isSphere, objIndex, etai) * FresnelReflectance);
+			hit = hit + (RecursiveTraceRay(reflection, recusiveDepth + 1, etai, isSphere_, objIndex_, etai) * FresnelReflectance);
 		}
 		else
 		{
 			rtColor trans;
-			trans = RecursiveTraceRay(transmission, recusiveDepth + 1, isSphere ? curEta : etai, isSphere, objIndex, etai) * ((1.f - FresnelReflectance) * (1.f - curAlpha));
-			hit = hit + (RecursiveTraceRay(reflection, recusiveDepth + 1, etai, isSphere, objIndex, etai) * FresnelReflectance) + trans;
+			trans = RecursiveTraceRay(transmission, recusiveDepth + 1, isSphere_ ? curEta : etai, isSphere_, objIndex_, etai) * ((1.f - FresnelReflectance) * (1.f - curAlpha));
+			hit = hit + (RecursiveTraceRay(reflection, recusiveDepth + 1, etai, isSphere_, objIndex_, etai) * FresnelReflectance) + trans;
 		}
 	}
 	else
@@ -459,7 +456,7 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 		float shadowMask = 1.f;
 		rtVector3 lightDir;
 		float maxT1;
-		float fatt = 1;
+		float fatt = 1.f;
 
 		// calculate the L vector in phong equation
 		switch (curLight.getType())
@@ -477,7 +474,7 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 		break;
 		case eLightType::kDirectionalLight:
 		{
-			lightDir = rtVector3(-curLight.m_center.m_x, -curLight.m_center.m_y, -curLight.m_center.m_z);
+			lightDir = curLight.m_vec3;
 			lightDir.twoNorm();
 		}
 		break;
@@ -505,6 +502,8 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 			}
 		}
 		break;
+		default:
+			break;
 		}
 
 		// calculate the V and H vectors in phong equation
@@ -543,7 +542,7 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 			float delta = B * B - 4.f * A * C;
 
 			// check discriminant
-			if (delta <= EPSILON && delta >= -EPSILON)
+			if (delta == 0.f)
 			{
 				float temp_t1 = (-B) / (2.f * A);
 				if (temp_t1 > 0 && temp_t1 < t1)
@@ -551,13 +550,13 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 					t1 = temp_t1;
 				}
 			}
-			else if (delta > EPSILON)
+			else if (delta > 0.f)
 			{
 				float temp_t1 = (std::sqrt(delta) - B) / (2.f * A);
 				float temp_t2 = (-std::sqrt(delta) - B) / (2.f * A);
 
 				float comparator = curLight.getType() == eLightType::kDirectionalLight ? std::numeric_limits<float>::infinity() : maxT1;
-				if ((temp_t1 > 0 && temp_t1 != comparator) || (temp_t2 > 0 && temp_t2 != comparator))
+				if ((temp_t1 > 0 && temp_t1 < comparator) || (temp_t2 > 0 && temp_t2 < comparator))
 				{
 					shadowMask = shadowMask * (1.f - fileInfo->materials[fileInfo->spheres[k].m_materialIndex].m_alpha);
 				}
@@ -592,7 +591,7 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 			float C = normal.m_z;
 			float D = -(firstVertex.m_x * A + firstVertex.m_y * B + firstVertex.m_z * C);
 			float deterimint = A * xd + B * yd + C * zd;
-			if (deterimint <= EPSILON && deterimint >= -EPSILON)
+			if (deterimint <= 0.0000005 && deterimint >= -0.0000005)
 			{
 				continue;
 			}
@@ -601,9 +600,9 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 			{
 				continue;
 			}
-			rtPoint p_for_tri = rtPoint::add(intersection, shadowRay.m_direction.scale(triT));
-			rtVector3 e3 = p_for_tri.subtract(secondVertex);
-			rtVector3 e4 = p_for_tri.subtract(thirdVertex);
+			rtPoint hitP = rtPoint::add(intersection, shadowRay.m_direction.scale(triT));
+			rtVector3 e3 = hitP.subtract(secondVertex);
+			rtVector3 e4 = hitP.subtract(thirdVertex);
 			float totalArea = rtVector3::area(e1, e2);
 			float aArea = rtVector3::area(e3, e4);
 			float bArea = rtVector3::area(e4, e2);
@@ -620,7 +619,7 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 					shadowMask = shadowMask * (1.f - fileInfo->materials[fileInfo->faceMaterialIndexs[triIndex]].m_alpha);
 				}
 
-				if (triT < t1 && triT > 0) // todo might not correct
+				if (triT < t1) // todo might not correct
 				{
 					t1 = triT;
 				}
@@ -636,22 +635,10 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 	return ans;
 }
 
-void rayTracer::OutputFinalImage()
+void rayTracer::OutputFinalImage(const std::string& outFolderName)
 {
-	std::string fileName = m_fileReader->getFileName();
-	for (int c = fileName.length() - 1; c >= 0; c--)
-	{
-		if (fileName[c] != '.')
-		{
-			fileName.pop_back();
-		}
-		else
-		{
-			fileName.pop_back();
-			break;
-		}
-	}
-	std::string outfileName = fileName + ".ppm";
+	auto outFilePath = std::filesystem::path(m_fileReader->getFileName());
+	std::string outfileName = outFolderName + "\\" + outFilePath.stem().string() + ".ppm";
 	std::ofstream outfile(outfileName);
 	outfile << "P3\n";
 	auto fileInfo = m_fileReader->getFileInfo();

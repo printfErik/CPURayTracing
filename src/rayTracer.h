@@ -17,7 +17,7 @@ public:
 	void ComputePixelColor();
 	rtColor RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float etai, bool isSphere, int whichObj, float lastEta);
 	rtColor BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection, int objIndex, rtVector3& normal, bool isSphere, rtPoint& newOrigin);
-	void OutputFinalImage();
+	void OutputFinalImage(const std::string& outFolderName);
 
 private:
 
@@ -33,9 +33,9 @@ private:
 	rtPoint m_ll;
 	rtPoint m_lr;
 
-	std::map<rtVector2, rtPoint> m_imgIndex2PointMap;
-	std::map<rtVector2, rtRay> m_imgIndex2RayMap;
+	std::map<rtVector2<int>, rtPoint> m_imgIndex2PointMap;
+	std::map<rtVector2<int>, rtRay> m_imgIndex2RayMap;
 
 	std::map<std::string, std::vector<rtColor>> m_textureData;
-	std::map<std::string, rtVector2> m_textureSize;
+	std::map<std::string, rtVector2<int>> m_textureSize;
 };

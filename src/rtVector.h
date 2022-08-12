@@ -37,15 +37,19 @@ private:
 
 };
 
+template <typename T>
 class rtVector2
 {
 public:
 	rtVector2() : m_x(0), m_y(0) {}
-	rtVector2(float _x, float _y) :
+	rtVector2(T _x, T _y) :
 		m_x(_x), m_y(_y) {}
 
-	bool operator < (const rtVector2& v) const;
+	bool operator < (const rtVector2& v) const
+	{
+		return (m_x < v.m_x) || (m_x == v.m_x && m_y < v.m_y);
+	}
 
-	float m_x;
-	float m_y;
+	T m_x;
+	T m_y;
 };

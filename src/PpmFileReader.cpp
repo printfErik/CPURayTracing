@@ -7,7 +7,7 @@ ppmFileReader::ppmFileReader(const std::string & fileName)
 	m_fileName = fileName;
 }
 
-void ppmFileReader::getTextureArray(std::vector<rtColor>& texture, rtVector2& size)
+void ppmFileReader::getTextureArray(std::vector<rtColor>& texture, rtVector2<int>& size)
 {
 	std::ifstream inFile;
 	inFile.open(m_fileName);

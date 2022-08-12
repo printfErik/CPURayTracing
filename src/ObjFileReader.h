@@ -17,14 +17,14 @@ struct ObjFileInfo
 	rtVector3 viewDir;
 	rtVector3 upDir;
 	float vFov = 0.f;
-	rtVector2 imageSize;
+	rtVector2<int> imageSize;
 	rtColor bkgColor;
 	std::vector<rtMaterial> materials;
 	std::vector<rtSphere> spheres;
 	std::vector<rtLight> lights;
 	std::vector<rtPoint> verteices;
 	std::vector<rtVector3> vertexNormals;
-	std::vector<rtVector2> vertexTextureCoordinates;
+	std::vector<rtVector2<float>> vertexTextureCoordinates;
 	std::vector<std::vector<std::vector<int>>> faces;
 	std::vector<int> faceMaterialIndexs;
 };

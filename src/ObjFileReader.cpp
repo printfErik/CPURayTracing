@@ -27,7 +27,7 @@ std::string ObjFileReader::getFileName()
 
 eParseRetType ObjFileReader::parseFile()
 {
-	_ASSERT(!m_objFileInfo);
+	_ASSERT(m_objFileInfo);
 	std::ifstream inFile;
 	inFile.open(m_fileName);
 
@@ -70,7 +70,7 @@ eParseRetType ObjFileReader::parseFile()
 				m_objFileInfo->eye = rtPoint(vec[0], vec[1], vec[2]);
 				hasEye = true;
 			}
-			else if (block == "viewDir")
+			else if (block == "viewdir")
 			{
 				std::vector<float> vec(3);
 				for (int i = 0; i < 3; i++)
@@ -138,7 +138,7 @@ eParseRetType ObjFileReader::parseFile()
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
-				m_objFileInfo->imageSize = rtVector2(vec[0], vec[1]);
+				m_objFileInfo->imageSize = rtVector2<int>(vec[0], vec[1]);
 				hasImgSize = true;
 			}
 			else if (block == "bkgcolor")
@@ -172,7 +172,7 @@ eParseRetType ObjFileReader::parseFile()
 					else
 					{
 						std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-						std::cout << "Keyword: " << block << " requires 3 floats" << std::endl;
+						std::cout << "Keyword: " << block << " requires 12 floats" << std::endl;
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
@@ -380,7 +380,7 @@ eParseRetType ObjFileReader::parseFile()
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
-				rtVector2 v(vec[0], vec[1]);
+				rtVector2<float> v(vec[0], vec[1]);
 				m_objFileInfo->vertexTextureCoordinates.push_back(v);
 			}
 			else if (block == "f")
@@ -402,7 +402,7 @@ eParseRetType ObjFileReader::parseFile()
 							else
 							{
 								n++;
-								face.push_back(std::stoi(index));
+								face.push_back(index.empty() ? -1 : std::stoi(index));
 								index = "";
 							}
 						}
