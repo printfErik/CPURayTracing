@@ -4,7 +4,7 @@
 
 int main(int argc, char* argv[])
 {
-	if (argc != 3)
+	if (argc != 4)
 	{
 		std::cout << "file name required" << std::endl;
 		return 0;
@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 	auto rayTracerApp = std::make_unique<rayTracer>();
 
 	rayTracerApp->Init(argv[1]);
-	rayTracerApp->ReadTextureFiles();
+	rayTracerApp->ReadTextureFiles(argv[3]);
 	rayTracerApp->ComputeUV();
 	rayTracerApp->ComputeAspectRatioAndRenderPlane();
 	rayTracerApp->InitPixelArray();

@@ -11,13 +11,19 @@ void ppmFileReader::getTextureArray(std::vector<rtColor>& texture, rtVector2<int
 {
 	std::ifstream inFile;
 	inFile.open(m_fileName);
-	std::string str;
+	
+	if (inFile.fail())
+	{
+		return;
+	}
 
-	int placeHolder1, placeHolder2;
+	std::string placeHolder1, placeHolder2, width, height;
 
-	inFile >> placeHolder1 >> size.m_x >> size.m_y >> placeHolder2;
+	inFile >> placeHolder1 >> width >> height >> placeHolder2;
+	size.m_x = std::stoi(width);
+	size.m_y = std::stoi(height);
 
-	for (int i = 0; i < (int)size.m_x * (int)size.m_y; i++)
+	for (int i = 0; i < size.m_x * size.m_y; i++)
 	{
 		std::string r, g, b;
 		inFile >> r >> g >> b;

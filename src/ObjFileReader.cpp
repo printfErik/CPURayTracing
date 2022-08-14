@@ -407,6 +407,10 @@ eParseRetType ObjFileReader::parseFile()
 							}
 						}
 						face.push_back(std::stoi(index));
+						if (face.size() == 2)
+						{
+							face.push_back(0);
+						}
 						vec.push_back(face);
 					}
 					else

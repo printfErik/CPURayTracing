@@ -19,15 +19,16 @@ bool rayTracer::Init(const std::string& fileName)
 	return true;
 }
 
-bool rayTracer::ReadTextureFiles()
+bool rayTracer::ReadTextureFiles(const std::string& textureDir)
 {
 	auto fileInfo = m_fileReader->getFileInfo();
 	for (int i = 0; i < fileInfo->materials.size(); i++)
 	{
 		std::string texName = fileInfo->materials[i].getTextureFile();
+		auto fullPath = (std::filesystem::path(textureDir) / texName).string();
 		if (!texName.empty())
 		{
-			std::unique_ptr<ppmFileReader> ppmFileReaderInstance = std::make_unique<ppmFileReader>(texName);
+			std::unique_ptr<ppmFileReader> ppmFileReaderInstance = std::make_unique<ppmFileReader>(fullPath);
 			std::vector<rtColor> texture;
 			rtVector2<int> size;
 			ppmFileReaderInstance->getTextureArray(texture, size);

@@ -8,7 +8,7 @@ class rayTracer
 public:
 	rayTracer() {}
 	bool Init(const std::string& fileName);
-	bool ReadTextureFiles();
+	bool ReadTextureFiles(const std::string& textureDir);
 	bool ComputeUV();
 	bool ComputeAspectRatioAndRenderPlane();
 	void InitPixelArray();
