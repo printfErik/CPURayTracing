@@ -469,6 +469,7 @@ rtColor rayTracer::BlinnPhongShading(const rtMaterial& mtlColor, const rtPoint& 
 			rtPoint lightSource(curLight.m_center.m_x, curLight.m_center.m_y, curLight.m_center.m_z);
 			lightDir = lightSource.subtract(intersection);
 			maxT1 = lightDir.length();
+			lightDir.twoNorm();
 
 			// for point light, use fatt to indicate "Light Source Attenuation"
 			fatt = 1.0 / (curLight.m_c1 + curLight.m_c2 * maxT1 + curLight.m_c3 * maxT1 * maxT1);
@@ -494,7 +495,7 @@ rtColor rayTracer::BlinnPhongShading(const rtMaterial& mtlColor, const rtPoint& 
 				rtPoint lightSource(curLight.m_center.m_x, curLight.m_center.m_y, curLight.m_center.m_z);
 				lightDir = lightSource.subtract(intersection);
 				maxT1 = lightDir.length();
-
+				lightDir.twoNorm();
 				// for point light, use fatt to indicate "Light Source Attenuation"
 				fatt = 1.0 / (curLight.m_c1 + curLight.m_c2 * maxT1 + curLight.m_c3 * maxT1 * maxT1);
 			}
