@@ -6,7 +6,7 @@
 #include <corecrt_math_defines.h>
 
 static constexpr int MAX_RECURSIVE_DEPTH = 7;
-static constexpr float EPSILON = 0.00000005f;
+static constexpr double EPSILON = 0.00000005;
 
 bool rayTracer::Init(const std::string& fileName)
 {
@@ -45,7 +45,7 @@ bool rayTracer::ComputeUV()
 	// check viewDir and upDir are not parallel
 	m_u = rtVector3::crossProduct(fileInfo->viewDir, fileInfo->upDir);
 
-	if (m_u.m_x == 0.f && m_u.m_y == 0.f && m_u.m_z == 0.f)
+	if (m_u.m_x == 0.0 && m_u.m_y == 0.0 && m_u.m_z == 0.0)
 	{
 		std::cout << "viewDir and upDir are parallel" << std::endl;
 		return false;
@@ -62,17 +62,17 @@ bool rayTracer::ComputeAspectRatioAndRenderPlane()
 {
 	auto fileInfo = m_fileReader->getFileInfo();
 
-	float aspectRatio = fileInfo->imageSize.m_x / fileInfo->imageSize.m_y;
-	float distance = 5.f; // random number
-	float height = 2.f * distance * std::tan(fileInfo->vFov * static_cast<float>(M_PI) / 360.f);
-	float width = height * aspectRatio;
+	double aspectRatio = fileInfo->imageSize.m_x / fileInfo->imageSize.m_y;
+	double distance = 5.0; // random number
+	double height = 2.0 * distance * std::tan(fileInfo->vFov * M_PI / 360.0);
+	double width = height * aspectRatio;
 	
 	rtVector3 n = fileInfo->viewDir.getTwoNorm();
 	rtPoint center = rtPoint::add(fileInfo->eye, n.scale(distance));
-	m_ul = rtPoint::add(rtPoint::add(center, m_u.scale(-width / 2.f)), m_v.scale(height / 2.f));
-	m_ur = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(width / 2.f).add(m_v.scale(height / 2.f))));
-	m_ll = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(-width / 2.f).add(m_v.scale(-height / 2.f))));
-	m_lr = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(width / 2.f).add(m_v.scale(-height / 2.f))));
+	m_ul = rtPoint::add(rtPoint::add(center, m_u.scale(-width / 2.0)), m_v.scale(height / 2.0));
+	m_ur = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(width / 2.0).add(m_v.scale(height / 2.0))));
+	m_ll = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(-width / 2.0).add(m_v.scale(-height / 2.0))));
+	m_lr = rtPoint::add(fileInfo->eye, n.scale(distance).add(m_u.scale(width / 2.0).add(m_v.scale(-height / 2.0))));
 
 	return true;
 }
@@ -95,17 +95,17 @@ void rayTracer::InitPixelArray()
 void rayTracer::CreatePixelIndexTo3DPointMap()
 {
 	auto fileInfo = m_fileReader->getFileInfo();
-	rtVector3 d_h = m_ur.subtract(m_ul).scale(1.f / static_cast<float>(fileInfo->imageSize.m_x));
-	rtVector3 d_v = m_ll.subtract(m_ul).scale(1.f / static_cast<float>(fileInfo->imageSize.m_y));
+	rtVector3 d_h = m_ur.subtract(m_ul).scale(1.0 / static_cast<double>(fileInfo->imageSize.m_x));
+	rtVector3 d_v = m_ll.subtract(m_ul).scale(1.0 / static_cast<double>(fileInfo->imageSize.m_y));
 
-	rtVector3 d_ch = m_ur.subtract(m_ul).scale(1.f / (2.f * static_cast<float>(fileInfo->imageSize.m_x)));
-	rtVector3 d_cv = m_ll.subtract(m_ul).scale(1.f / (2.f * static_cast<float>(fileInfo->imageSize.m_y)));
+	rtVector3 d_ch = m_ur.subtract(m_ul).scale(1.0 / (2.0 * static_cast<double>(fileInfo->imageSize.m_x)));
+	rtVector3 d_cv = m_ll.subtract(m_ul).scale(1.0 / (2.0 * static_cast<double>(fileInfo->imageSize.m_y)));
 	
 	for (int i = 0; i < fileInfo->imageSize.m_x; i++)
 	{
 		for (int j = 0; j < fileInfo->imageSize.m_y; j++)
 		{
-			rtPoint p = rtPoint::add(rtPoint::add(rtPoint::add(rtPoint::add(m_ul, d_h.scale((float)i)), d_v.scale((float)j)), d_ch), d_cv);
+			rtPoint p = rtPoint::add(rtPoint::add(rtPoint::add(rtPoint::add(m_ul, d_h.scale((double)i)), d_v.scale((double)j)), d_ch), d_cv);
 			rtVector2<int> index(i, j);
 			m_imgIndex2PointMap[index] = p;
 		}
@@ -141,19 +141,19 @@ void rayTracer::ComputePixelColor()
 		{
 			rtVector2<int> index(i, j);
 			rtRay ray = m_imgIndex2RayMap[index];
-			rtColor pixelColor = RecursiveTraceRay(ray, 0, 1.f, true, -1, 1.f);
+			rtColor pixelColor = RecursiveTraceRay(ray, 0, 1.0, true, -1, 1.0);
 			pixelColor.clamp();
 			m_pixels[i][j] = pixelColor;
 		}
 	}
 }
 
-rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float etai, bool isSphere, int objIndex, float lastEta)
+rtColor rayTracer::RecursiveTraceRay(const rtRay& incidence, int recusiveDepth, double etai, bool isSphere, int objIndex, double lastEta)
 {
 	auto fileInfo = m_fileReader->getFileInfo();
 	if (recusiveDepth == MAX_RECURSIVE_DEPTH)
 	{
-		float r, g, b;
+		double r, g, b;
 		if (isSphere)
 		{
 			r = fileInfo->materials[fileInfo->spheres[objIndex].m_materialIndex].m_odr;
@@ -172,11 +172,11 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 	// determine is a ray intersects with an object;
 	bool exit = false;
 	rtColor hit;
-	float t1 = std::numeric_limits<float>::infinity();
+	double t1 = std::numeric_limits<double>::infinity();
 
 	std::vector<rtVector3> triNormals;
 
-	std::vector<float> alphas, betas, gammas;
+	std::vector<double> alphas, betas, gammas;
 
 	bool isSphere_ = true;
 	int objIndex_ = -1;
@@ -185,26 +185,26 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 
 	for (int sphereIndex = 0; sphereIndex < fileInfo->spheres.size(); sphereIndex++)
 	{
-		float xc = fileInfo->spheres[sphereIndex].m_center.m_x;
-		float yc = fileInfo->spheres[sphereIndex].m_center.m_y;
-		float zc = fileInfo->spheres[sphereIndex].m_center.m_z;
-		float r = fileInfo->spheres[sphereIndex].m_radius;
+		double xc = fileInfo->spheres[sphereIndex].m_center.m_x;
+		double yc = fileInfo->spheres[sphereIndex].m_center.m_y;
+		double zc = fileInfo->spheres[sphereIndex].m_center.m_z;
+		double r = fileInfo->spheres[sphereIndex].m_radius;
 
-		float distanceX = incidence.m_origin.m_x - xc;
-		float distanceY = incidence.m_origin.m_y - yc;
-		float distanceZ = incidence.m_origin.m_z - zc;
+		double distanceX = incidence.m_origin.m_x - xc;
+		double distanceY = incidence.m_origin.m_y - yc;
+		double distanceZ = incidence.m_origin.m_z - zc;
 
-		float A = 1.f;
-		float B = 2.f * (incidence.m_direction.m_x * distanceX +
+		double A = 1.0;
+		double B = 2.0 * (incidence.m_direction.m_x * distanceX +
 						 incidence.m_direction.m_y * distanceY +
 						 incidence.m_direction.m_z * distanceZ);
-		float C = distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ - r * r;
+		double C = distanceX * distanceX + distanceY * distanceY + distanceZ * distanceZ - r * r;
 
-		float delta = B * B - 4.f * A * C;
+		double delta = B * B - 4.0 * A * C;
 
-		if (delta == 0.f)// (delta close to zero)
+		if (delta == 0.0)// (delta close to zero)
 		{
-			float tempT = (-B) / (2.f * A);
+			double tempT = (-B) / (2.0 * A);
 			if (tempT < t1 && tempT > 0.0000005)
 			{
 				t1 = tempT;
@@ -217,8 +217,8 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 		}
 		else if (delta > 0)
 		{
-			float tempT1 = (std::sqrt(delta) - B) / (2.f * A);
-			float tempT2 = (-std::sqrt(delta) - B) / (2.f * A);
+			double tempT1 = (std::sqrt(delta) - B) / (2.0 * A);
+			double tempT2 = (-std::sqrt(delta) - B) / (2.0 * A);
 			bool isHit = false;
 			if ((tempT1 < t1) && tempT1 > 0.0000005)
 			{
@@ -254,11 +254,11 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 		rtVector3 e1 = secondVertex.subtract(firstVertex);
 		rtVector3 e2 = thirdVertex.subtract(firstVertex);
 		rtVector3 normal = rtVector3::crossProduct(e1, e2);
-		float A = normal.m_x;
-		float B = normal.m_y;
-		float C = normal.m_z;
-		float D = -(firstVertex.m_x * A + firstVertex.m_y * B + firstVertex.m_z * C);
-		float deterimint = A * incidence.m_direction.m_x + B * incidence.m_direction.m_y + C * incidence.m_direction.m_z;
+		double A = normal.m_x;
+		double B = normal.m_y;
+		double C = normal.m_z;
+		double D = -(firstVertex.m_x * A + firstVertex.m_y * B + firstVertex.m_z * C);
+		double deterimint = A * incidence.m_direction.m_x + B * incidence.m_direction.m_y + C * incidence.m_direction.m_z;
 
 		// check if viewdir is parallel to the surface
 		if (deterimint <= EPSILON && deterimint >= -EPSILON)
@@ -266,8 +266,8 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 			total++;
 			continue;
 		}
-		float tTri = -(A * incidence.m_origin.m_x + B * incidence.m_origin.m_y + C * incidence.m_origin.m_z + D) / deterimint;
-		if (tTri < 0.f || tTri > t1)
+		double tTri = -(A * incidence.m_origin.m_x + B * incidence.m_origin.m_y + C * incidence.m_origin.m_z + D) / deterimint;
+		if (tTri < 0.0 || tTri > t1)
 		{
 			total++;
 			continue;
@@ -275,13 +275,13 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 		rtPoint hitPoint = rtPoint::add(incidence.m_origin, incidence.m_direction.scale(tTri));
 		rtVector3 e3 = hitPoint.subtract(secondVertex);
 		rtVector3 e4 = hitPoint.subtract(thirdVertex);
-		float totalArea = rtVector3::area(e1, e2);
-		float aArea = rtVector3::area(e3, e4);
-		float bArea = rtVector3::area(e4, e2);
-		float cArea = rtVector3::area(e1, e3);
-		float alpha = aArea / totalArea;
-		float beta = bArea / totalArea;
-		float gamma = cArea / totalArea;
+		double totalArea = rtVector3::area(e1, e2);
+		double aArea = rtVector3::area(e3, e4);
+		double bArea = rtVector3::area(e4, e2);
+		double cArea = rtVector3::area(e1, e3);
+		double alpha = aArea / totalArea;
+		double beta = bArea / totalArea;
+		double gamma = cArea / totalArea;
 
 		// determine Barycentric coordinates
 		if (alpha < 1 && alpha > 0 && beta < 1 && beta > 0 && gamma > 0 && gamma < 1 && alpha + beta + gamma - 1 < EPSILON)
@@ -348,13 +348,13 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 		if (!name.empty()) // if texture detected
 		{
 			rtColor texelColor;
-			float textureU, textureV;
+			double textureU, textureV;
 			if (!isSphere_)
 			{
 				//mapping texture to a triangle
-				rtVector2<float> first_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][0][1] - 1];
-				rtVector2<float> second_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][1][1] - 1];
-				rtVector2<float> third_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][2][1] - 1];
+				rtVector2<double> first_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][0][1] - 1];
+				rtVector2<double> second_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][1][1] - 1];
+				rtVector2<double> third_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][2][1] - 1];
 				// using Barycentric coordinates
 				textureU = (alphas.back() * first_2d.m_x + betas.back() * second_2d.m_x + gammas.back() * third_2d.m_x);
 				textureV = (alphas.back() * first_2d.m_y + betas.back() * second_2d.m_y + gammas.back() * third_2d.m_y);
@@ -362,14 +362,14 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 			else
 			{
 				//mapping texture to a sphere
-				float phi = std::acos((closest.m_z - fileInfo->spheres[objIndex_].m_center.m_z) / fileInfo->spheres[objIndex_].m_radius);
-				float zeta = std::atan2((closest.m_y - fileInfo->spheres[objIndex_].m_center.m_y), (closest.m_x - fileInfo->spheres[objIndex_].m_center.m_x));
-				textureV = phi / static_cast<float>(M_PI);
-				textureU = (zeta + static_cast<float>(M_PI)) / (2.f * static_cast<float>(M_PI));
+				double phi = std::acos((closest.m_z - fileInfo->spheres[objIndex_].m_center.m_z) / fileInfo->spheres[objIndex_].m_radius);
+				double zeta = std::atan2((closest.m_y - fileInfo->spheres[objIndex_].m_center.m_y), (closest.m_x - fileInfo->spheres[objIndex_].m_center.m_x));
+				textureV = phi / static_cast<double>(M_PI);
+				textureU = (zeta + static_cast<double>(M_PI)) / (2.0 * static_cast<double>(M_PI));
 			}
-			texelColor = m_textureData[name][static_cast<int>(textureV * (m_textureSize[name].m_y - 1.f) + 0.5f) * static_cast<int>(m_textureSize[name].m_x)
-										   + static_cast<int>(textureU * (m_textureSize[name].m_x - 1.f) + 0.5f)];
-			rtMaterial tempMtl(texelColor.m_r / 255.f, texelColor.m_g / 255.f, texelColor.m_b / 255.f,
+			texelColor = m_textureData[name][static_cast<int>(textureV * (m_textureSize[name].m_y - 1.0) + 0.5) * static_cast<int>(m_textureSize[name].m_x)
+										   + static_cast<int>(textureU * (m_textureSize[name].m_x - 1.0) + 0.5)];
+			rtMaterial tempMtl(texelColor.m_r / 255.0, texelColor.m_g / 255.0, texelColor.m_b / 255.0,
 								temp.m_osr, temp.m_osg, temp.m_osb,
 								temp.m_ka, temp.m_kd, temp.m_ks, temp.m_falloff, temp.m_alpha, temp.m_eta);
 			hit = BlinnPhongShading(tempMtl, closest, objIndex_, normal, isSphere_, incidence.m_origin);
@@ -379,30 +379,31 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 			hit = BlinnPhongShading(temp, closest, objIndex_, normal, isSphere_, incidence.m_origin);
 		}
 
-		rtVector3 forwardEpsilon = incidence.m_direction.scale(t1 + 0.00005);
+		
+		rtVector3 forwardEpsilon = incidence.m_direction.scale(t1 + 0.005);
 		rtPoint forward = rtPoint::add(incidence.m_origin, forwardEpsilon);
 
-		rtVector3 backwardEpsilon = incidence.m_direction.scale(t1 - 0.00005);
+		rtVector3 backwardEpsilon = incidence.m_direction.scale(t1 - 0.005);
 		rtPoint backward = rtPoint::add(incidence.m_origin, backwardEpsilon);
 
 		rtRay reflection;
 		rtVector3 reflectionDir;
 
-		float cosphii = std::abs(rtVector3::dotProduct(I, normal));
-		float sinphii = std::pow(1.f - cosphii * cosphii, 0.5f);
-		reflectionDir = normal.scale(cosphii * 2.f).add(incidence.m_direction.getTwoNorm());
+		double cosphii = std::abs(rtVector3::dotProduct(I, normal));
+		double sinphii = std::pow(1.0 - cosphii * cosphii, 0.5);
+		reflectionDir = normal.scale(cosphii * 2.0).add(incidence.m_direction.getTwoNorm());
 		reflection.m_origin = backward;
 		reflection.m_direction = reflectionDir;
 
-		float curEta = temp.m_eta;
-		float curAlpha = temp.m_alpha;
+		double curEta = temp.m_eta;
+		double curAlpha = temp.m_alpha;
 
 		if (exit)
 		{
 			curEta = lastEta;
 		}
-		float F0 = ((curEta - etai) / (curEta + etai)) * ((curEta - etai) / (curEta + etai));
-		float FresnelReflectance = F0 + (1.f - F0) * std::pow((1.f - cosphii), 5.f);
+		double F0 = ((curEta - etai) / (curEta + etai)) * ((curEta - etai) / (curEta + etai));
+		double FresnelReflectance = F0 + (1.0 - F0) * std::pow((1.0 - cosphii), 5.0);
 
 		rtRay transmission;
 		rtVector3 transmissionDir;
@@ -412,8 +413,8 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 		}
 		else
 		{
-			float firstCoff = std::pow(1.f - (etai / curEta) * (etai / curEta) * (1.f - cosphii * cosphii), 0.5f);
-			rtVector3 transmissionDir = normal.scale(-1.f).scale(firstCoff).add(normal.scale(cosphii * (etai / curEta))).add(I.scale(-1.f).scale(etai / curEta));
+			double firstCoff = std::pow(1.0 - (etai / curEta) * (etai / curEta) * (1.0 - cosphii * cosphii), 0.5);
+			transmissionDir = normal.scale(-1.0).scale(firstCoff).add(normal.scale(cosphii * (etai / curEta))).add(I.scale(-1.0).scale(etai / curEta));
 			transmissionDir.twoNorm();
 		}
 
@@ -427,9 +428,10 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 		else
 		{
 			rtColor trans;
-			trans = RecursiveTraceRay(transmission, recusiveDepth + 1, isSphere_ ? curEta : etai, isSphere_, objIndex_, etai) * ((1.f - FresnelReflectance) * (1.f - curAlpha));
+			trans = RecursiveTraceRay(transmission, recusiveDepth + 1, isSphere_ ? curEta : etai, isSphere_, objIndex_, etai) * ((1.0 - FresnelReflectance) * (1.0 - curAlpha));
 			hit = hit + (RecursiveTraceRay(reflection, recusiveDepth + 1, etai, isSphere_, objIndex_, etai) * FresnelReflectance) + trans;
 		}
+		
 	}
 	else
 	{
@@ -439,24 +441,24 @@ rtColor rayTracer::RecursiveTraceRay(rtRay& incidence, int recusiveDepth, float 
 	return hit;
 }
 
-rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection, int objIndex, rtVector3& normal, bool isSphere, rtPoint& newOrigin)
+rtColor rayTracer::BlinnPhongShading(const rtMaterial& mtlColor, const rtPoint& intersection, int objIndex, const rtVector3& normal, bool isSphere, const rtPoint& newOrigin)
 {
 	auto fileInfo = m_fileReader->getFileInfo();
 	rtPoint center;
 
 	// set intial color based on material property
-	float r = mtlColor.m_ka * mtlColor.m_odr;
-	float g = mtlColor.m_ka * mtlColor.m_odg;
-	float b = mtlColor.m_ka * mtlColor.m_odb;
+	double r = mtlColor.m_ka * mtlColor.m_odr;
+	double g = mtlColor.m_ka * mtlColor.m_odg;
+	double b = mtlColor.m_ka * mtlColor.m_odb;
 
 	// shoot lights to the intersection
 	for (int i = 0; i < fileInfo->lights.size(); i++)
 	{
 		auto curLight = fileInfo->lights[i];
-		float shadowMask = 1.f;
+		double shadowMask = 1.0;
 		rtVector3 lightDir;
-		float maxT1;
-		float fatt = 1.f;
+		double maxT1 = 0.0;
+		double fatt = 1.0;
 
 		// calculate the L vector in phong equation
 		switch (curLight.getType())
@@ -469,12 +471,12 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 			maxT1 = lightDir.length();
 
 			// for point light, use fatt to indicate "Light Source Attenuation"
-			fatt = 1.f / (curLight.m_c1 + curLight.m_c2 * maxT1 + curLight.m_c3 * maxT1 * maxT1);
+			fatt = 1.0 / (curLight.m_c1 + curLight.m_c2 * maxT1 + curLight.m_c3 * maxT1 * maxT1);
 		}
 		break;
 		case eLightType::kDirectionalLight:
 		{
-			lightDir = curLight.m_vec3;
+			lightDir = rtVector3(-curLight.m_vec3.m_x, -curLight.m_vec3.m_y, -curLight.m_vec3.m_z);
 			lightDir.twoNorm();
 		}
 		break;
@@ -487,14 +489,14 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 
 			// check if this spotlight is valid for the single intersection 
 			// then add them to the global lights vector and count the number 
-			if (rtVector3::dotProduct(vlight, vobj) >= std::cos(curLight.m_theta * M_PI / 180.f))
+			if (rtVector3::dotProduct(vlight, vobj) >= std::cos(curLight.m_theta * M_PI / 180.0))
 			{
 				rtPoint lightSource(curLight.m_center.m_x, curLight.m_center.m_y, curLight.m_center.m_z);
 				lightDir = lightSource.subtract(intersection);
 				maxT1 = lightDir.length();
 
 				// for point light, use fatt to indicate "Light Source Attenuation"
-				fatt = 1.f / (curLight.m_c1 + curLight.m_c2 * maxT1 + curLight.m_c3 * maxT1 * maxT1);
+				fatt = 1.0 / (curLight.m_c1 + curLight.m_c2 * maxT1 + curLight.m_c3 * maxT1 * maxT1);
 			}
 			else
 			{
@@ -509,20 +511,20 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 		// calculate the V and H vectors in phong equation
 		rtVector3 V = newOrigin.subtract(intersection).getTwoNorm();
 		rtVector3 H = lightDir.add(V).getTwoNorm();
-		float nl = rtVector3::dotProduct(normal, lightDir);
-		float nh = rtVector3::dotProduct(normal, H);
+		double nl = rtVector3::dotProduct(normal, lightDir);
+		double nh = rtVector3::dotProduct(normal, H);
 
 		// shoot shadow rays to check shadow
-		float t1 = std::numeric_limits<float>::infinity();
+		double t1 = std::numeric_limits<double>::infinity();
 		rtRay shadowRay;
 		shadowRay.m_origin = intersection;
 		shadowRay.m_direction = lightDir;
-		float x0 = shadowRay.m_origin.m_x;
-		float y0 = shadowRay.m_origin.m_y;
-		float z0 = shadowRay.m_origin.m_z;
-		float xd = shadowRay.m_direction.m_x;
-		float yd = shadowRay.m_direction.m_y;
-		float zd = shadowRay.m_direction.m_z;
+		double x0 = shadowRay.m_origin.m_x;
+		double y0 = shadowRay.m_origin.m_y;
+		double z0 = shadowRay.m_origin.m_z;
+		double xd = shadowRay.m_direction.m_x;
+		double yd = shadowRay.m_direction.m_y;
+		double zd = shadowRay.m_direction.m_z;
 
 		for (int k = 0; k < fileInfo->spheres.size(); k++)
 		{
@@ -531,34 +533,34 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 				continue;
 			}
 
-			float xc = fileInfo->spheres[k].m_center.m_x;
-			float yc = fileInfo->spheres[k].m_center.m_y;
-			float zc = fileInfo->spheres[k].m_center.m_z;
-			float r = fileInfo->spheres[k].m_radius;
+			double xc = fileInfo->spheres[k].m_center.m_x;
+			double yc = fileInfo->spheres[k].m_center.m_y;
+			double zc = fileInfo->spheres[k].m_center.m_z;
+			double r = fileInfo->spheres[k].m_radius;
 
-			float A = 1.f;
-			float B = 2.f * (xd * (x0 - xc) + yd * (y0 - yc) + zd * (z0 - zc));
-			float C = (x0 - xc) * (x0 - xc) + (y0 - yc) * (y0 - yc) + (z0 - zc) * (z0 - zc) - r * r;
-			float delta = B * B - 4.f * A * C;
+			double A = 1.0;
+			double B = 2.0 * (xd * (x0 - xc) + yd * (y0 - yc) + zd * (z0 - zc));
+			double C = (x0 - xc) * (x0 - xc) + (y0 - yc) * (y0 - yc) + (z0 - zc) * (z0 - zc) - r * r;
+			double delta = B * B - 4.0 * A * C;
 
 			// check discriminant
-			if (delta == 0.f)
+			if (delta == 0.0)
 			{
-				float temp_t1 = (-B) / (2.f * A);
+				double temp_t1 = (-B) / (2.0 * A);
 				if (temp_t1 > 0 && temp_t1 < t1)
 				{
 					t1 = temp_t1;
 				}
 			}
-			else if (delta > 0.f)
+			else if (delta > 0.0)
 			{
-				float temp_t1 = (std::sqrt(delta) - B) / (2.f * A);
-				float temp_t2 = (-std::sqrt(delta) - B) / (2.f * A);
+				double temp_t1 = (std::sqrt(delta) - B) / (2.0 * A);
+				double temp_t2 = (-std::sqrt(delta) - B) / (2.0 * A);
 
-				float comparator = curLight.getType() == eLightType::kDirectionalLight ? std::numeric_limits<float>::infinity() : maxT1;
+				double comparator = curLight.getType() == eLightType::kDirectionalLight ? std::numeric_limits<double>::infinity() : maxT1;
 				if ((temp_t1 > 0 && temp_t1 < comparator) || (temp_t2 > 0 && temp_t2 < comparator))
 				{
-					shadowMask = shadowMask * (1.f - fileInfo->materials[fileInfo->spheres[k].m_materialIndex].m_alpha);
+					shadowMask = shadowMask * (1.0 - fileInfo->materials[fileInfo->spheres[k].m_materialIndex].m_alpha);
 				}
 
 				if ((temp_t1 < t1) && temp_t1 > 0)
@@ -586,40 +588,40 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 			rtVector3 e1 = secondVertex.subtract(firstVertex);
 			rtVector3 e2 = thirdVertex.subtract(firstVertex);
 			rtVector3 normal = rtVector3::crossProduct(e1, e2);
-			float A = normal.m_x;
-			float B = normal.m_y;
-			float C = normal.m_z;
-			float D = -(firstVertex.m_x * A + firstVertex.m_y * B + firstVertex.m_z * C);
-			float deterimint = A * xd + B * yd + C * zd;
+			double A = normal.m_x;
+			double B = normal.m_y;
+			double C = normal.m_z;
+			double D = -(firstVertex.m_x * A + firstVertex.m_y * B + firstVertex.m_z * C);
+			double deterimint = A * xd + B * yd + C * zd;
 			if (deterimint <= 0.0000005 && deterimint >= -0.0000005)
 			{
 				continue;
 			}
-			float triT = -(A * x0 + B * y0 + C * z0 + D) / deterimint;
-			if (triT < 0)
+			double triT = -(A * x0 + B * y0 + C * z0 + D) / deterimint;
+			if (triT <= 0.0)
 			{
 				continue;
 			}
 			rtPoint hitP = rtPoint::add(intersection, shadowRay.m_direction.scale(triT));
 			rtVector3 e3 = hitP.subtract(secondVertex);
 			rtVector3 e4 = hitP.subtract(thirdVertex);
-			float totalArea = rtVector3::area(e1, e2);
-			float aArea = rtVector3::area(e3, e4);
-			float bArea = rtVector3::area(e4, e2);
-			float cArea = rtVector3::area(e1, e3);
-			float alpha = aArea / totalArea;
-			float beta = bArea / totalArea;
-			float gamma = cArea / totalArea;
-			if (alpha < 1.f && alpha > 0.f && beta < 1.f && beta > 0.f && gamma > 0.f && gamma < 1.f && alpha + beta + gamma - 1 < EPSILON)
+			double totalArea = rtVector3::area(e1, e2);
+			double aArea = rtVector3::area(e3, e4);
+			double bArea = rtVector3::area(e4, e2);
+			double cArea = rtVector3::area(e1, e3);
+			double alpha = aArea / totalArea;
+			double beta = bArea / totalArea;
+			double gamma = cArea / totalArea;
+			if (alpha < 1.0 && alpha > 0.0 && beta < 1.0 && beta > 0.0 && gamma > 0.0 && gamma < 1.0 && alpha + beta + gamma - 1 < 0.0005)
 			{
-				float comparator = curLight.getType() == eLightType::kDirectionalLight ? std::numeric_limits<float>::infinity() : maxT1;
+				double comparator = curLight.getType() == eLightType::kDirectionalLight ? std::numeric_limits<double>::infinity() : maxT1;
 
 				if (triT > 0 && triT < comparator)
 				{
-					shadowMask = shadowMask * (1.f - fileInfo->materials[fileInfo->faceMaterialIndexs[triIndex]].m_alpha);
+					shadowMask = shadowMask * (1.0 - fileInfo->materials[fileInfo->faceMaterialIndexs[triIndex]].m_alpha);
 				}
 
-				if (triT < t1) // todo might not correct
+				if (triT < t1 && triT > 0) // todo might not correct
 				{
 					t1 = triT;
 				}
@@ -627,9 +629,9 @@ rtColor rayTracer::BlinnPhongShading(rtMaterial& mtlColor, rtPoint& intersection
 		}
 
 		// using phong equation to calculate rgb values
-		r += shadowMask * fatt * (mtlColor.m_kd * mtlColor.m_odr * std::max(nl, 0.f) + mtlColor.m_ks * mtlColor.m_osr * std::pow(std::max(nh, 0.f), mtlColor.m_falloff));
-		g += shadowMask * fatt * (mtlColor.m_kd * mtlColor.m_odg * std::max(nl, 0.f) + mtlColor.m_ks * mtlColor.m_osg * std::pow(std::max(nh, 0.f), mtlColor.m_falloff));
-		b += shadowMask * fatt * (mtlColor.m_kd * mtlColor.m_odb * std::max(nl, 0.f) + mtlColor.m_ks * mtlColor.m_osb * std::pow(std::max(nh, 0.f), mtlColor.m_falloff));
+		r += 1.0 * fatt * (mtlColor.m_kd * mtlColor.m_odr * std::max(nl, 0.0) + mtlColor.m_ks * mtlColor.m_osr * std::pow(std::max(nh, 0.0), mtlColor.m_falloff));
+		g += 1.0 * fatt * (mtlColor.m_kd * mtlColor.m_odg * std::max(nl, 0.0) + mtlColor.m_ks * mtlColor.m_osg * std::pow(std::max(nh, 0.0), mtlColor.m_falloff));
+		b += 1.0 * fatt * (mtlColor.m_kd * mtlColor.m_odb * std::max(nl, 0.0) + mtlColor.m_ks * mtlColor.m_osb * std::pow(std::max(nh, 0.0), mtlColor.m_falloff));
 	}
 	rtColor ans(r, g, b);
 	return ans;

@@ -53,17 +53,17 @@ eParseRetType ObjFileReader::parseFile()
 		{
 			if (block == "eye")
 			{
-				std::vector<float> vec(3);
+				std::vector<double> vec(3);
 				for (int i = 0; i < 3; i++)
 				{
 					if (iss >> block)
 					{
-						vec[i] = std::stof(block);
+						vec[i] = std::stod(block);
 					}
 					else
 					{
 						std::cout << "-----------FILE PARSE ERROR-------------"<< std::endl;
-						std::cout << "Keyword: " << block << " requires 3 floats" << std::endl;
+						std::cout << "Keyword: " << block << " requires 3 doubles" << std::endl;
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
@@ -72,17 +72,17 @@ eParseRetType ObjFileReader::parseFile()
 			}
 			else if (block == "viewdir")
 			{
-				std::vector<float> vec(3);
+				std::vector<double> vec(3);
 				for (int i = 0; i < 3; i++)
 				{
 					if (iss >> block)
 					{
-						vec[i] = std::stof(block);
+						vec[i] = std::stod(block);
 					}
 					else
 					{
 						std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-						std::cout << "Keyword: " << block << " requires 3 floats" << std::endl;
+						std::cout << "Keyword: " << block << " requires 3 doubles" << std::endl;
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
@@ -91,17 +91,17 @@ eParseRetType ObjFileReader::parseFile()
 			}
 			else if (block == "updir")
 			{
-				std::vector<float> vec(3);
+				std::vector<double> vec(3);
 				for (int i = 0; i < 3; i++)
 				{
 					if (iss >> block)
 					{
-						vec[i] = std::stof(block);
+						vec[i] = std::stod(block);
 					}
 					else
 					{
 						std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-						std::cout << "Keyword: " << block << " requires 3 floats" << std::endl;
+						std::cout << "Keyword: " << block << " requires 3 doubles" << std::endl;
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
@@ -112,12 +112,12 @@ eParseRetType ObjFileReader::parseFile()
 			{
 				if (iss >> block)
 				{
-					m_objFileInfo->vFov = std::stof(block);
+					m_objFileInfo->vFov = std::stod(block);
 				}
 				else
 				{
 					std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-					std::cout << "Keyword: " << block << " requires 3 floats" << std::endl;
+					std::cout << "Keyword: " << block << " requires 3 doubles" << std::endl;
 					return eParseRetType::kEyeKeywordFormatError;
 				}
 				hasVFov = true;
@@ -134,7 +134,7 @@ eParseRetType ObjFileReader::parseFile()
 					else
 					{
 						std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-						std::cout << "Keyword: " << block << " requires 2 floats" << std::endl;
+						std::cout << "Keyword: " << block << " requires 2 doubles" << std::endl;
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
@@ -143,17 +143,17 @@ eParseRetType ObjFileReader::parseFile()
 			}
 			else if (block == "bkgcolor")
 			{
-				std::vector<float> vec(3);
+				std::vector<double> vec(3);
 				for (int i = 0; i < 3; i++)
 				{
 					if (iss >> block)
 					{
-						vec[i] = std::stof(block);
+						vec[i] = std::stod(block);
 					}
 					else
 					{
 						std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-						std::cout << "Keyword: " << block << " requires 3 floats" << std::endl;
+						std::cout << "Keyword: " << block << " requires 3 doubles" << std::endl;
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
@@ -162,17 +162,17 @@ eParseRetType ObjFileReader::parseFile()
 			}
 			else if (block == "mtlcolor")
 			{
-				std::vector<float> vec(12);
+				std::vector<double> vec(12);
 				for (int i = 0; i < 12; i++)
 				{
 					if (iss >> block)
 					{
-						vec[i] = std::stof(block);
+						vec[i] = std::stod(block);
 					}
 					else
 					{
 						std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-						std::cout << "Keyword: " << block << " requires 12 floats" << std::endl;
+						std::cout << "Keyword: " << block << " requires 12 doubles" << std::endl;
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
@@ -180,17 +180,17 @@ eParseRetType ObjFileReader::parseFile()
 			}
 			else if (block == "sphere")
 			{
-				std::vector<float> vec(4);
+				std::vector<double> vec(4);
 				for (int i = 0; i < 4; i++)
 				{
 					if (iss >> block)
 					{
-						vec[i] = std::stof(block);
+						vec[i] = std::stod(block);
 					}
 					else
 					{
 						std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-						std::cout << "Keyword: " << block << " requires 3 floats" << std::endl;
+						std::cout << "Keyword: " << block << " requires 3 doubles" << std::endl;
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
@@ -210,61 +210,61 @@ eParseRetType ObjFileReader::parseFile()
 				{
 				case eLightType::kPointLight:
 				{
-					std::vector<float> vec(6);
+					std::vector<double> vec(6);
 					for (int i = 0; i < 6; i++)
 					{
 						if (iss >> block)
 						{
-							vec[i] = std::stof(block);
+							vec[i] = std::stod(block);
 						}
 						else
 						{
 							std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-							std::cout << "Keyword: " << block << " requires 7 floats" << std::endl;
+							std::cout << "Keyword: " << block << " requires 7 doubles" << std::endl;
 							return eParseRetType::kEyeKeywordFormatError;
 						}
 					}
 					light.setCenter(rtPoint(vec[0], vec[1], vec[2]));
 					light.setColor(rtColor(vec[3], vec[4], vec[5]));
-					light.setAttAttribute(1.f, 0.f, 0.f);
+					light.setAttAttribute(1.0, 0.0, 0.0);
 					m_objFileInfo->lights.push_back(light);
 					break;
 				}
 				case eLightType::kDirectionalLight:
 				{
-					std::vector<float> vec(6);
+					std::vector<double> vec(6);
 					for (int i = 0; i < 6; i++)
 					{
 						if (iss >> block)
 						{
-							vec[i] = std::stof(block);
+							vec[i] = std::stod(block);
 						}
 						else
 						{
 							std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-							std::cout << "Keyword: " << block << " requires 7 floats" << std::endl;
+							std::cout << "Keyword: " << block << " requires 7 doubles" << std::endl;
 							return eParseRetType::kEyeKeywordFormatError;
 						}
 					}
 					light.setVector3(rtVector3(vec[0], vec[1], vec[2]));
 					light.setColor(rtColor(vec[3], vec[4], vec[5]));
-					light.setAttAttribute(1.f, 0.f, 0.f);
+					light.setAttAttribute(1.0, 0.0, 0.0);
 					m_objFileInfo->lights.push_back(light);
 					break;
 				}
 				case eLightType::kSpotlight:
 				{
-					std::vector<float> vec(10);
+					std::vector<double> vec(10);
 					for (int i = 0; i < 10; i++)
 					{
 						if (iss >> block)
 						{
-							vec[i] = std::stof(block);
+							vec[i] = std::stod(block);
 						}
 						else
 						{
 							std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-							std::cout << "Keyword: " << block << " requires 7 floats" << std::endl;
+							std::cout << "Keyword: " << block << " requires 7 doubles" << std::endl;
 							return eParseRetType::kEyeKeywordFormatError;
 						}
 					}
@@ -272,23 +272,23 @@ eParseRetType ObjFileReader::parseFile()
 					light.setVector3(rtVector3(vec[3], vec[4], vec[5]));
 					light.setTheta(vec[6]);
 					light.setColor(rtColor(vec[7], vec[8], vec[9]));
-					light.setAttAttribute(1.f, 0.f, 0.f);
+					light.setAttAttribute(1.0, 0.0, 0.0);
 					m_objFileInfo->lights.push_back(light);
 					break;
 				}
 				case eLightType::kAttPointLight:
 				{
-					std::vector<float> vec(9);
+					std::vector<double> vec(9);
 					for (int i = 0; i < 9; i++)
 					{
 						if (iss >> block)
 						{
-							vec[i] = std::stof(block);
+							vec[i] = std::stod(block);
 						}
 						else
 						{
 							std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-							std::cout << "Keyword: " << block << " requires 10 floats" << std::endl;
+							std::cout << "Keyword: " << block << " requires 10 doubles" << std::endl;
 							return eParseRetType::kEyeKeywordFormatError;
 						}
 					}
@@ -300,17 +300,17 @@ eParseRetType ObjFileReader::parseFile()
 				}
 				case eLightType::kAttSpotlight:
 				{
-					std::vector<float> vec(13);
+					std::vector<double> vec(13);
 					for (int i = 0; i < 10; i++)
 					{
 						if (iss >> block)
 						{
-							vec[i] = std::stof(block);
+							vec[i] = std::stod(block);
 						}
 						else
 						{
 							std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-							std::cout << "Keyword: " << block << " requires 7 floats" << std::endl;
+							std::cout << "Keyword: " << block << " requires 7 doubles" << std::endl;
 							return eParseRetType::kEyeKeywordFormatError;
 						}
 					}
@@ -328,17 +328,17 @@ eParseRetType ObjFileReader::parseFile()
 			}
 			else if (block == "v")
 			{
-				std::vector<float> vec(3);
+				std::vector<double> vec(3);
 				for (int i = 0; i < 3; i++)
 				{
 					if (iss >> block)
 					{
-						vec[i] = std::stof(block);
+						vec[i] = std::stod(block);
 					}
 					else
 					{
 						std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-						std::cout << "Keyword: " << block << " requires 3 floats" << std::endl;
+						std::cout << "Keyword: " << block << " requires 3 doubles" << std::endl;
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
@@ -347,17 +347,17 @@ eParseRetType ObjFileReader::parseFile()
 			}
 			else if (block == "vn")
 			{
-				std::vector<float> vec(3);
+				std::vector<double> vec(3);
 				for (int i = 0; i < 3; i++)
 				{
 					if (iss >> block)
 					{
-						vec[i] = std::stof(block);
+						vec[i] = std::stod(block);
 					}
 					else
 					{
 						std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-						std::cout << "Keyword: " << block << " requires 3 floats" << std::endl;
+						std::cout << "Keyword: " << block << " requires 3 doubles" << std::endl;
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
@@ -366,21 +366,21 @@ eParseRetType ObjFileReader::parseFile()
 			}
 			else if (block == "vt")
 			{
-				std::vector<float> vec(2);
+				std::vector<double> vec(2);
 				for (int i = 0; i < 2; i++)
 				{
 					if (iss >> block)
 					{
-						vec[i] = std::stof(block);
+						vec[i] = std::stod(block);
 					}
 					else
 					{
 						std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-						std::cout << "Keyword: " << block << " requires 2 floats" << std::endl;
+						std::cout << "Keyword: " << block << " requires 2 doubles" << std::endl;
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}
-				rtVector2<float> v(vec[0], vec[1]);
+				rtVector2<double> v(vec[0], vec[1]);
 				m_objFileInfo->vertexTextureCoordinates.push_back(v);
 			}
 			else if (block == "f")
@@ -412,7 +412,7 @@ eParseRetType ObjFileReader::parseFile()
 					else
 					{
 						std::cout << "-----------FILE PARSE ERROR-------------" << std::endl;
-						std::cout << "Keyword: " << block << " requires 3 floats" << std::endl;
+						std::cout << "Keyword: " << block << " requires 3 doubles" << std::endl;
 						return eParseRetType::kEyeKeywordFormatError;
 					}
 				}

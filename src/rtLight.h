@@ -51,12 +51,12 @@ public:
 		return m_type;
 	}
 
-	void setTheta(float t)
+	void setTheta(double t)
 	{
 		m_theta = t;
 	}
 
-	void setAttAttribute(float c1, float c2, float c3);
+	void setAttAttribute(double c1, double c2, double c3);
 
 	eLightType m_type = eLightType::kUndefined;
 	rtPoint m_center;
@@ -66,8 +66,8 @@ public:
 
 	
 
-	float m_theta = 0.f;
-	float m_c1 = 0.f;
-	float m_c2 = 0.f;
-	float m_c3 = 0.f;
+	double m_theta = 0.0;
+	double m_c1 = 0.0;
+	double m_c2 = 0.0;
+	double m_c3 = 0.0;
 };

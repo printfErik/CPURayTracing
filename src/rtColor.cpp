@@ -1,6 +1,6 @@
 #include "rtColor.h"
 
-rtColor rtColor::operator* (float scale)
+rtColor rtColor::operator* (double scale)
 {
 	rtColor ans;
 	ans.m_r = m_r * scale;
@@ -20,9 +20,9 @@ rtColor rtColor::operator + (const rtColor& c)
 
 void rtColor::clamp()
 {
-	m_r = m_r > 1 ? 1.f : m_r;
-	m_g = m_g > 1 ? 1.f : m_g;
-	m_b = m_b > 1 ? 1.f : m_b;
+	m_r = m_r > 1 ? 1.0 : m_r;
+	m_g = m_g > 1 ? 1.0 : m_g;
+	m_b = m_b > 1 ? 1.0 : m_b;
 }
 
 int rtColor::rtoi()

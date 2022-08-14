@@ -16,7 +16,7 @@ struct ObjFileInfo
 	rtPoint eye;
 	rtVector3 viewDir;
 	rtVector3 upDir;
-	float vFov = 0.f;
+	double vFov = 0.0;
 	rtVector2<int> imageSize;
 	rtColor bkgColor;
 	std::vector<rtMaterial> materials;
@@ -24,7 +24,7 @@ struct ObjFileInfo
 	std::vector<rtLight> lights;
 	std::vector<rtPoint> verteices;
 	std::vector<rtVector3> vertexNormals;
-	std::vector<rtVector2<float>> vertexTextureCoordinates;
+	std::vector<rtVector2<double>> vertexTextureCoordinates;
 	std::vector<std::vector<std::vector<int>>> faces;
 	std::vector<int> faceMaterialIndexs;
 };

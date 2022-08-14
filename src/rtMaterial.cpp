@@ -5,7 +5,7 @@ void rtMaterial::setTextureFile(const std::string& filePath)
 	m_textureFilePath = filePath;
 }
 
-void rtMaterial::setMtlProperties(float _odr, float _odg, float _odb, float _osr, float _osg, float _osb, float _ka, float _kd, float _ks, float _falloff, float _alpha, float _eta)
+void rtMaterial::setMtlProperties(double _odr, double _odg, double _odb, double _osr, double _osg, double _osb, double _ka, double _kd, double _ks, double _falloff, double _alpha, double _eta)
 {
 	m_odr = _odr;
 	m_odg = _odg;

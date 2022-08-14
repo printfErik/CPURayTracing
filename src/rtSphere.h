@@ -5,16 +5,16 @@ class rtSphere
 {
 public:
 	rtSphere() {}
-	rtSphere(rtPoint& _center, float radius)
+	rtSphere(rtPoint& _center, double radius)
 		: m_center(_center), m_radius(radius) {}
 
-	void setCenter(float x, float y, float z);
+	void setCenter(double x, double y, double z);
 
 
 	int m_materialIndex = -1;
 
 
 	rtPoint m_center;
-	float m_radius = 0.f;
+	double m_radius = 0.0;
 	
 };
