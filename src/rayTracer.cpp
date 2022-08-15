@@ -63,7 +63,7 @@ bool rayTracer::ComputeAspectRatioAndRenderPlane()
 {
 	auto fileInfo = m_fileReader->getFileInfo();
 
-	double aspectRatio = fileInfo->imageSize.m_x / fileInfo->imageSize.m_y;
+	double aspectRatio = static_cast<double>(fileInfo->imageSize.m_x) / static_cast<double>(fileInfo->imageSize.m_y);
 	double distance = 5.0; // random number
 	double height = 2.0 * distance * std::tan(fileInfo->vFov * M_PI / 360.0);
 	double width = height * aspectRatio;
@@ -175,9 +175,9 @@ rtColor rayTracer::RecursiveTraceRay(const rtRay& incidence, int recusiveDepth, 
 	rtColor hit;
 	double t1 = std::numeric_limits<double>::infinity();
 
-	std::vector<rtVector3> triNormals;
+	rtVector3 triNormal;
 
-	std::vector<double> alphas, betas, gammas;
+	double finalAlpha, finalBeta, finalGamma;
 
 	bool isSphere_ = true;
 	int objIndex_ = -1;
@@ -206,7 +206,7 @@ rtColor rayTracer::RecursiveTraceRay(const rtRay& incidence, int recusiveDepth, 
 		if (delta == 0.0)// (delta close to zero)
 		{
 			double tempT = (-B) / (2.0 * A);
-			if (tempT < t1 && tempT > 0.0000005)
+			if (tempT < t1 && tempT > 0)
 			{
 				t1 = tempT;
 				objIndex_ = sphereIndex;
@@ -221,14 +221,14 @@ rtColor rayTracer::RecursiveTraceRay(const rtRay& incidence, int recusiveDepth, 
 			double tempT1 = (std::sqrt(delta) - B) / (2.0 * A);
 			double tempT2 = (-std::sqrt(delta) - B) / (2.0 * A);
 			bool isHit = false;
-			if ((tempT1 < t1) && tempT1 > 0.0000005)
+			if ((tempT1 < t1) && tempT1 > 0)
 			{
 				t1 = tempT1;
 				objIndex_ = sphereIndex;
 				isHit = true;
 			}
 
-			if ((tempT2 < t1) && tempT2 > 0.0000005)
+			if ((tempT2 < t1) && tempT2 > 0)
 			{
 				t1 = tempT2;
 				objIndex_ = sphereIndex;
@@ -290,22 +290,22 @@ rtColor rayTracer::RecursiveTraceRay(const rtRay& incidence, int recusiveDepth, 
 			t1 = tTri;
 			isSphere_ = false;
 			objIndex_ = triangleIndex;
-			alphas.push_back(alpha);
-			betas.push_back(beta);
-			gammas.push_back(gamma);
+			finalAlpha = alpha;
+			finalBeta = beta;
+			finalGamma = gamma;
 			if (fileInfo->faces[triangleIndex][0][2] == 0)
 			{
 				// if no vn, which means flat shading
-				triNormals.push_back(normal);
+				triNormal = normal;
 			}
 			else
 			{
 				// smooth shading
-				rtVector3 first_nromal = fileInfo->vertexNormals[fileInfo->faces[triangleIndex][0][2] - 1];
-				rtVector3 second_nromal = fileInfo->vertexNormals[fileInfo->faces[triangleIndex][1][2] - 1];
-				rtVector3 third_nromal = fileInfo->vertexNormals[fileInfo->faces[triangleIndex][2][2] - 1];
-				rtVector3 smooth_normal = (first_nromal.scale(alpha).add(second_nromal.scale(beta)).add(third_nromal.scale(gamma))).getTwoNorm();
-				triNormals.push_back(smooth_normal);
+				rtVector3 firstNromal = fileInfo->vertexNormals[fileInfo->faces[triangleIndex][0][2] - 1];
+				rtVector3 secondNromal = fileInfo->vertexNormals[fileInfo->faces[triangleIndex][1][2] - 1];
+				rtVector3 thirdNromal = fileInfo->vertexNormals[fileInfo->faces[triangleIndex][2][2] - 1];
+				rtVector3 smoothNormal = (firstNromal.scale(alpha).add(secondNromal.scale(beta)).add(thirdNromal.scale(gamma))).getTwoNorm();
+				triNormal = smoothNormal;
 			}
 		}
 		else
@@ -332,7 +332,7 @@ rtColor rayTracer::RecursiveTraceRay(const rtRay& incidence, int recusiveDepth, 
 		{
 			// compute normal vector for triangle which will be used in phong equation
 			temp = fileInfo->materials[fileInfo->faceMaterialIndexs[objIndex_]];
-			normal = triNormals.back().getTwoNorm();
+			normal = triNormal.getTwoNorm();
 		}
 
 		if (rtVector3::dotProduct(I, normal) < 0)
@@ -353,20 +353,20 @@ rtColor rayTracer::RecursiveTraceRay(const rtRay& incidence, int recusiveDepth, 
 			if (!isSphere_)
 			{
 				//mapping texture to a triangle
-				rtVector2<double> first_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][0][1] - 1];
-				rtVector2<double> second_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][1][1] - 1];
-				rtVector2<double> third_2d = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][2][1] - 1];
+				rtVector2<double> firstTexCord = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][0][1] - 1];
+				rtVector2<double> secondTexCord = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][1][1] - 1];
+				rtVector2<double> thirdTexCord = fileInfo->vertexTextureCoordinates[fileInfo->faces[objIndex_][2][1] - 1];
 				// using Barycentric coordinates
-				textureU = (alphas.back() * first_2d.m_x + betas.back() * second_2d.m_x + gammas.back() * third_2d.m_x);
-				textureV = (alphas.back() * first_2d.m_y + betas.back() * second_2d.m_y + gammas.back() * third_2d.m_y);
+				textureU = (finalAlpha * firstTexCord.m_x + finalBeta * secondTexCord.m_x + finalGamma * thirdTexCord.m_x);
+				textureV = (finalAlpha * firstTexCord.m_y + finalBeta * secondTexCord.m_y + finalGamma * thirdTexCord.m_y);
 			}
 			else
 			{
 				//mapping texture to a sphere
 				double phi = std::acos((closest.m_z - fileInfo->spheres[objIndex_].m_center.m_z) / fileInfo->spheres[objIndex_].m_radius);
 				double zeta = std::atan2((closest.m_y - fileInfo->spheres[objIndex_].m_center.m_y), (closest.m_x - fileInfo->spheres[objIndex_].m_center.m_x));
-				textureV = phi / static_cast<double>(M_PI);
-				textureU = (zeta + static_cast<double>(M_PI)) / (2.0 * static_cast<double>(M_PI));
+				textureV = phi / M_PI;
+				textureU = (zeta + M_PI) / (2.0 * M_PI);
 			}
 			texelColor = m_textureData[name][static_cast<int>(textureV * (m_textureSize[name].m_y - 1.0) + 0.5) * static_cast<int>(m_textureSize[name].m_x)
 										   + static_cast<int>(textureU * (m_textureSize[name].m_x - 1.0) + 0.5)];
@@ -381,10 +381,10 @@ rtColor rayTracer::RecursiveTraceRay(const rtRay& incidence, int recusiveDepth, 
 		}
 
 		
-		rtVector3 forwardEpsilon = incidence.m_direction.scale(t1 + 0.005);
+		rtVector3 forwardEpsilon = incidence.m_direction.scale(t1 + EPSILON);
 		rtPoint forward = rtPoint::add(incidence.m_origin, forwardEpsilon);
 
-		rtVector3 backwardEpsilon = incidence.m_direction.scale(t1 - 0.005);
+		rtVector3 backwardEpsilon = incidence.m_direction.scale(t1 - EPSILON);
 		rtPoint backward = rtPoint::add(incidence.m_origin, backwardEpsilon);
 
 		rtRay reflection;
@@ -595,7 +595,7 @@ rtColor rayTracer::BlinnPhongShading(const rtMaterial& mtlColor, const rtPoint& 
 			double C = normal.m_z;
 			double D = -(firstVertex.m_x * A + firstVertex.m_y * B + firstVertex.m_z * C);
 			double deterimint = A * xd + B * yd + C * zd;
-			if (deterimint <= 0.0000005 && deterimint >= -0.0000005)
+			if (deterimint <= EPSILON && deterimint >= -EPSILON)
 			{
 				continue;
 			}
@@ -614,7 +614,7 @@ rtColor rayTracer::BlinnPhongShading(const rtMaterial& mtlColor, const rtPoint& 
 			double alpha = aArea / totalArea;
 			double beta = bArea / totalArea;
 			double gamma = cArea / totalArea;
-			if (alpha < 1.0 && alpha > 0.0 && beta < 1.0 && beta > 0.0 && gamma > 0.0 && gamma < 1.0 && alpha + beta + gamma - 1 < 0.0005)
+			if (alpha < 1.0 && alpha > 0.0 && beta < 1.0 && beta > 0.0 && gamma > 0.0 && gamma < 1.0 && alpha + beta + gamma - 1 < EPSILON)
 			{
 				double comparator = curLight.getType() == eLightType::kDirectionalLight ? std::numeric_limits<double>::infinity() : maxT1;
 
@@ -631,9 +631,9 @@ rtColor rayTracer::BlinnPhongShading(const rtMaterial& mtlColor, const rtPoint& 
 		}
 
 		// using phong equation to calculate rgb values
-		r += 1.0 * fatt * (mtlColor.m_kd * mtlColor.m_odr * std::max(nl, 0.0) + mtlColor.m_ks * mtlColor.m_osr * std::pow(std::max(nh, 0.0), mtlColor.m_falloff));
-		g += 1.0 * fatt * (mtlColor.m_kd * mtlColor.m_odg * std::max(nl, 0.0) + mtlColor.m_ks * mtlColor.m_osg * std::pow(std::max(nh, 0.0), mtlColor.m_falloff));
-		b += 1.0 * fatt * (mtlColor.m_kd * mtlColor.m_odb * std::max(nl, 0.0) + mtlColor.m_ks * mtlColor.m_osb * std::pow(std::max(nh, 0.0), mtlColor.m_falloff));
+		r += shadowMask * fatt * (mtlColor.m_kd * mtlColor.m_odr * std::max(nl, 0.0) + mtlColor.m_ks * mtlColor.m_osr * std::pow(std::max(nh, 0.0), mtlColor.m_falloff));
+		g += shadowMask * fatt * (mtlColor.m_kd * mtlColor.m_odg * std::max(nl, 0.0) + mtlColor.m_ks * mtlColor.m_osg * std::pow(std::max(nh, 0.0), mtlColor.m_falloff));
+		b += shadowMask * fatt * (mtlColor.m_kd * mtlColor.m_odb * std::max(nl, 0.0) + mtlColor.m_ks * mtlColor.m_osb * std::pow(std::max(nh, 0.0), mtlColor.m_falloff));
 	}
 	rtColor ans(r, g, b);
 	return ans;
